@@ -73,8 +73,8 @@ function Home() {
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-6 max-w-4xl mx-auto">
-      {sortedClasses.length > 0 ? (
-        sortedClasses.map((classItem, index) => (
+      {classData.length > 0 ? (
+        classData.map((classItem, index) => (
           <div
             key={classItem._id || index}
             className="border border-gray-300 rounded-lg p-4 bg-white shadow-sm hover:shadow-md transition cursor-pointer"
