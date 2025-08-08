@@ -1,0 +1,73 @@
+/* MathTopicsList.css */
+
+.container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 20px;
+  height: 600px; /* Fixed height */
+  overflow-y: auto;
+}
+
+.title {
+  text-align: center;
+  font-size: 2rem;
+  margin-bottom: 10px;
+}
+
+.subtitle {
+  text-align: center;
+  margin-bottom: 20px;
+  font-size: 1.2rem;
+  color: #666;
+}
+
+.category-section {
+  margin-bottom: 30px;
+}
+
+.category-title {
+  font-size: 1.5rem;
+  margin-bottom: 10px;
+  color: #444;
+}
+
+.topic-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 10px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.topic-item {
+  background-color: #f0f8ff;
+  padding: 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: start;
+}
+
+.topic-item:hover {
+  background-color: #e0f0ff;
+}
+
+.topic-code {
+  font-weight: bold;
+  font-size: 1rem;
+}
+
+.grade-tag {
+  font-size: 0.85rem;
+  color: #888;
+  margin-top: 5px;
+}
+
+@media (max-width: 600px) {
+  .topic-item {
+    flex: 1 1 100%; /* Stack vertically on small screens */
+  }
+}
