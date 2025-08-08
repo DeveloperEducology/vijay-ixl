@@ -14,39 +14,39 @@ function Home() {
   const [loading, setLoading] = useState(true);
   // const [loadingImage] = useState(UploadingAnimation);
 
-  useEffect(() => {
-    const fetchQuestions = async () => {
-      setLoading(true); // start loading
-      try {
-        const questionsRes = await axios.get(
-          `https://ilx-backend.onrender.com/api/classes`
-          // `http://localhost:5000/api/classes`
-        );
-        console.log("classes data", questionsRes.data);
-        if (questionsRes.data.length > 0) {
-          // setClassData(questionsRes.data);
-          setError(null);
-        } else {
-          setClassData([]);
-          setError("No questions available for this lesson.");
-        }
-      } catch (error) {
-        console.error("Error fetching data:", error);
-        setError("Failed to load questions. Please try again later.");
-        setClassData([]);
-      } finally {
-        // setLoading(false); // stop loading
-        setTimeout(() => {
-          setLoading(false); // stop loading after 2 seconds
-        }, 100);
-      }
-    };
+  // useEffect(() => {
+  //   const fetchQuestions = async () => {
+  //     setLoading(true); // start loading
+  //     try {
+  //       const questionsRes = await axios.get(
+  //         `https://ilx-backend.onrender.com/api/classes`
+  //         // `http://localhost:5000/api/classes`
+  //       );
+  //       console.log("classes data", questionsRes.data);
+  //       if (questionsRes.data.length > 0) {
+  //         // setClassData(questionsRes.data);
+  //         setError(null);
+  //       } else {
+  //         setClassData([]);
+  //         setError("No questions available for this lesson.");
+  //       }
+  //     } catch (error) {
+  //       console.error("Error fetching data:", error);
+  //       setError("Failed to load questions. Please try again later.");
+  //       setClassData([]);
+  //     } finally {
+  //       // setLoading(false); // stop loading
+  //       setTimeout(() => {
+  //         setLoading(false); // stop loading after 2 seconds
+  //       }, 100);
+  //     }
+  //   };
 
-    fetchQuestions();
-  }, []);
+  //   fetchQuestions();
+  // }, []);
 
   // If jsonData is still loading or not available, show a loading state
-  if (!classData || loading) {
+  if (!classData) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <img
