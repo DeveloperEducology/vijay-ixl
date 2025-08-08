@@ -39,6 +39,25 @@ const MathTopicsList = () => {
           </ul>
         </div>
       ))}
+      <div>
+        <h2 className="category-title">Other Topics</h2>
+        <p
+          //   key={topic.id}
+          className="topic-item"
+          onClick={() => navigate(`/sorting`)}
+        >
+          <span className="topic-code">Sorting</span>{" "}
+          {/* <span className="grade-tag">Grade {topic.grade}</span> */}
+        </p>
+        <p
+          //   key={topic.id}
+          className="topic-item"
+          onClick={() => navigate(`/bucket`)}
+        >
+          <span className="topic-code">Bucket Sorting</span>{" "}
+          {/* <span className="grade-tag">Grade {topic.grade}</span> */}
+        </p>
+      </div>
     </div>
   );
 };
