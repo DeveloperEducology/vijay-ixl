@@ -9,6 +9,8 @@ import remarkGfm from "remark-gfm";
 import { InlineMath } from "react-katex";
 import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
+import NumberSortingGame from "../components/NumberSortingGame";
+import BucketSortingGame from "../components/BucketSortingGame";
 
 const KidFriendlyPage = () => {
   const { topicId } = useParams();
@@ -27,6 +29,26 @@ const KidFriendlyPage = () => {
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [isPuterReady, setIsPuterReady] = useState(false);
   const [showhint, setShowhint] = useState(false);
+
+  const handleCorrectAnswer = () => {
+    setScore((prev) => prev + 1);
+  };
+
+  const renderGameComponent = () => {
+    switch (decodedKey) {
+      case "Number Sorting":
+        return <NumberSortingGame onCorrectAnswer={handleCorrectAnswer} />;
+      case "Bucket Sorting":
+        return <BucketSortingGame onCorrectAnswer={handleCorrectAnswer} />;
+      default:
+        return (
+          <div className="bg-white/80 backdrop-blur-sm p-6 rounded-xl shadow-xl space-y-6">
+            {/* Render regular question components */}
+            {/* ... [keep all existing JSX for regular questions] */}
+          </div>
+        );
+    }
+  };
 
   // useEffect(() => {
   //   const script = document.createElement("script");
@@ -589,6 +611,13 @@ const KidFriendlyPage = () => {
               {isSpeaking ? <FiVolume /> : <FiVolume2 />}
             </button>
 
+            {decodedKey === "Number Sorting" && (
+              <div className="max-w-4xl mx-auto">{renderGameComponent()}</div>
+            )}
+            {decodedKey === "Bucket Sorting" && (
+              <div className="max-w-4xl mx-auto">{renderGameComponent()}</div>
+            )}
+
             <div>
               {currentQuestion?.passage && (
                 <div className="mb-4">
@@ -613,14 +642,12 @@ const KidFriendlyPage = () => {
                 </ReactMarkdown>
               )}
 
-             <div className="overflow-auto max-w-full px-2">
-  <div
-    className="w-full max-w-full"
-    dangerouslySetInnerHTML={{ __html: currentQuestion?.svg }}
-  />
-</div>
-
-
+              <div className="overflow-auto max-w-full px-2">
+                <div
+                  className="w-full max-w-full"
+                  dangerouslySetInnerHTML={{ __html: currentQuestion?.svg }}
+                />
+              </div>
 
               <ReactMarkdown
                 remarkPlugins={[remarkGfm]}

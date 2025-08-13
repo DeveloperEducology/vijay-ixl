@@ -422,4 +422,16 @@ export const class2_maths_topicList = [
     category: "Navodaya-speed-distance",
     grade: "2",
   },
+  {
+    id: "topic_38",
+    name: "Number Sorting",
+    category: "Sorting",
+    grade: "2",
+  },
+  {
+    id: "topic_38",
+    name: "Bucket Sorting",
+    category: "Sorting",
+    grade: "2",
+  },
 ];
