@@ -143,14 +143,16 @@ function getClassroomQuestion() {
 
 export const questionsGenerator = {
   "🔢 Number Line": generateNumberLineQuestion,
-  "A.0 Skip-Counting-pictures": () => {
+  "Skip-Counting-picturessss": () => {
     const candies = [
       {
-        imageUrl: "https://placehold.co/40x40/ff69b4/fff?text=L",
+        imageUrl:
+          "https://static.vecteezy.com/system/resources/thumbnails/044/242/751/small/colorful-swirl-lollipops-collection-on-a-transparent-background-png.png",
         name: "lollipops",
       },
       {
-        imageUrl: "https://placehold.co/40x40/ffa500/fff?text=C",
+        imageUrl:
+          "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQPWTc2HHiloowuXUMqtvFcEmphABRIfA5Cpw&s",
         name: "candies",
       },
       {
@@ -192,7 +194,7 @@ export const questionsGenerator = {
     };
   },
 
-  "A.1 Skip-Counting-by-pictures": () => {
+  "Skip-Counting-pictures": () => {
     const candies = [
       { emoji: "🍭", name: "lollipops" },
       { emoji: "🍬", name: "candies" },
@@ -200,6 +202,8 @@ export const questionsGenerator = {
       { emoji: "🧁", name: "cupcakes" },
       { emoji: "🍩", name: "donuts" },
       { emoji: "🦄", name: "unicorns" },
+      { emoji: "🚁", name: "helicopters" },
+      { emoji: "🛩️", name: "airplanes" },
     ];
     const steps = [2, 3, 5, 10];
     const step = steps[Math.floor(Math.random() * steps.length)];
@@ -212,12 +216,35 @@ export const questionsGenerator = {
       emoji.repeat(step)
     );
 
+    // Step-by-step explanation for a 5-year-old
+    const explanation = [
+      `Look at each group of ${name}.`,
+      `Each group has **${step}** ${name}.`,
+      `We need to find out how many there are in total.`,
+      `Instead of counting one by one, we skip-count by ${step}s.`,
+      `Say the numbers out loud: ${Array.from(
+        { length: numGroups },
+        (_, i) => (i + 1) * step
+      ).join(", ")}.`,
+      `The last number you say is the total number of ${name}.`,
+    ];
+
+    // Example problem & solution
+    const example = [
+      "Example: There are 3 groups of cupcakes. Each group has 2 cupcakes.",
+      "We count by 2s: 2, 4, 6.",
+      "So, there are 6 cupcakes in total.",
+    ];
+
     return {
       type: "input",
-      question: `Count by ${step}s: How many ${name} are there in total?`,
+      question: `Count by **${step}s**:`,
+      prompt: `How many **${name}** are there in total?`,
       answer: total.toString(),
       visuals: visualGroups,
       options: [],
+      explanation, // New field
+      example, // New field
     };
   },
 
@@ -232,7 +259,7 @@ export const questionsGenerator = {
       answer: series[4],
     };
   },
-  "A.2 Skip-counting sequences": () => {
+  "Skip-counting sequences": () => {
     const steps = [2, 3, 4, 5, 10, 25];
     const step = steps[Math.floor(Math.random() * steps.length)];
     const start = Math.floor(Math.random() * 10) * step;
@@ -250,7 +277,7 @@ export const questionsGenerator = {
       options: [],
     };
   },
-  "A.2.1 missing number in sequence": () => {
+  "missing number in sequence": () => {
     const stepOptions = [1, 2, 3, 5, 10];
     const step = stepOptions[Math.floor(Math.random() * stepOptions.length)];
 
@@ -283,14 +310,17 @@ export const questionsGenerator = {
       type: "sequence",
       question: `Fill the ${
         numBlanks > 1 ? "blanks" : "blank"
-      } with the correct number${numBlanks > 1 ? "s" : ""}.`,
+      } with the correct number${
+        numBlanks > 1 ? "s" : ""
+      }. \n add **${step}** to next number `,
+
       sequences: [questionArray.join(" ")],
       correctAnswers,
       stepHint: `Count by ${step}s`,
     };
   },
 
-  "A.2.2 Counting patterns-up to 100": () => {
+  "Counting patterns-up to 100": () => {
     const stepOptions = [2, 3, 4, 5, 10];
     const step = stepOptions[Math.floor(Math.random() * stepOptions.length)];
 
@@ -315,8 +345,20 @@ export const questionsGenerator = {
     };
   },
 
-  "A.6 Even or odd": () => {
-    const emojis = ["🍎", "🍊", "🍇", "🍓", "🐶", "🐱", "⚽", "🏀", "🚗", "🚀"];
+  "Even or odd": () => {
+    const emojis = [
+      "🍎",
+      "🍊",
+      "🍇",
+      "🍓",
+      "🐶",
+      "🐱",
+      "⚽",
+      "🏀",
+      "🚗",
+      "🚀",
+      "✈️",
+    ];
     const count = Math.floor(Math.random() * 10) + 3; // 3 to 12 emojis
     const answer = count % 2 === 0 ? "Even" : "Odd";
 
@@ -325,13 +367,13 @@ export const questionsGenerator = {
 
     return {
       type: "mcq",
-      question: "Is the number of items Even or Odd?",
+      question: `Is the number of **${randomEmoji}s** Even or Odd?`,
       answer: answer,
       visuals: visualEmojis,
       options: ["Even", "Odd"],
     };
   },
-  "A.7 Identify numbers as even or odd": () => {
+  "Identify numbers as even or odd": () => {
     const count = Math.floor(Math.random() * 20) + 2; // Generates a number from 2 to 99
     const answer = count % 2 === 0 ? "Even" : "Odd";
 

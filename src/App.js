@@ -9,6 +9,8 @@ import DragSortBuckets from "./pages/DragSortBuckets";
 import QuizPage from "./componentss/QuizPage";
 import LessonList from "./componentss/LessonList";
 import IXLHomePage from "./componentss/IXLHomePage";
+import SSC_CHSL_MockTest from "./componentss/SSC_CHSL_MockTest";
+import Vijay from "./componentss/Vijay";
 
 function App() {
   return (
@@ -19,11 +21,13 @@ function App() {
 
       {/* <Route path="/kid-math" element={<MathTopicsList />} /> */}
       <Route path="/bucket" element={<DragSortBuckets />} />
+      <Route path="/vijay" element={<Vijay />} />
       <Route path="/ixl-home" element={<IXLHomePage />} />
       <Route path="/lessons" element={<LessonList />} />
       <Route path="/sorting" element={<SortingComponent />} />
+      <Route path="/ssc" element={<SSC_CHSL_MockTest />} />
       <Route path="/kid-math" element={<MathTopicsList />} />
-      <Route path="/quiz/:id" element={<QuizPage />} />
+      <Route path="/quiz/:topicId" element={<QuizPage />} />
 
       <Route path="/kid/:topicId" element={<KidFriendlyPage />} />
       <Route path="/subjects/:classId" element={<SubjectsPage />} />

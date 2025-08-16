@@ -2,9 +2,8 @@ import React, { useState } from "react";
 import { class2LessonData } from "./LessonData_class2";
 import { useNavigate } from "react-router-dom";
 
-
 const LessonList = () => {
-      const navigate = useNavigate();
+  const navigate = useNavigate();
 
   const [activeTab, setActiveTab] = useState("Classes");
   const [topics, setTopics] = useState(class2LessonData);
@@ -20,22 +19,24 @@ const LessonList = () => {
   const column2 = topicsWithCodes.slice(6, 12);
   const column3 = topicsWithCodes.slice(12);
 
-
   const renderColumn = (column) =>
     column.map((topic) => (
       <div key={topic.code}>
-        <h2 className="text-[13px] font-bold mb-1 text-[#8a8a8a] mt-5 first:mt-0">
+        <h2 className="text-[15px] font-bold mb-1 text-[#8a8a8a] mt-5 first:mt-0">
           {topic.category}
         </h2>
         <ul className="list-none space-y-0.5">
           {topic.items.map((item) => (
-            <li key={item.id}>
+            <li
+              key={item.id}
+              className="text-[12px] gray-800 hover:text-[#00a1e0]"
+            >
               <button
                 onClick={() => navigate(`/quiz/${item.id}`)}
                 className="text-left hover:underline cursor-pointer w-full"
               >
                 <span className="font-semibold" style={{ color: topic.color }}>
-                  {topic.code}.{item.id.split("-").pop()}
+                  {/* {topic.code}.{item.id.split("-").pop()} */}
                 </span>{" "}
                 {item.name}
               </button>
@@ -44,7 +45,7 @@ const LessonList = () => {
         </ul>
       </div>
     ));
-    
+
   return (
     <div className="max-w-[900px] mx-auto p-4 bg-white font-sans text-[13px] leading-tight text-[#333]">
       {/* Top tabs */}

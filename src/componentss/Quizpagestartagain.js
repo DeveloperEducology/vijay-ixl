@@ -10,11 +10,9 @@ import remarkGfm from "remark-gfm";
 import { InlineMath } from "react-katex";
 import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
-import { FiVolume, FiVolume2 } from "react-icons/fi";
 
 const QuizPage = () => {
   const { topicId } = useParams();
-  const [isSpeaking, setIsSpeaking] = useState(false);
   const [selectedOption, setSelectedOption] = useState(null); // for SMCQ
   const [selectedOptions, setSelectedOptions] = useState({}); // for MCQ
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -30,20 +28,10 @@ const QuizPage = () => {
   const [currentQuestion, setCurrentQuestion] = useState(null);
   const [userAnswer, setUserAnswer] = useState("");
   const [userAnswers, setUserAnswers] = useState("");
-  const [selectedNumbers, setSelectedNumbers] = useState([]); // for number-line
-  const [feedback, setFeedback] = useState("");
-  const [showhint, setShowhint] = useState(false);
 
   const decodedKey = decodeURIComponent(topicId);
   console.log(decodedKey);
   console.log(questionsGenerator);
-
-  useEffect(() => {
-    if (questionsGenerator[decodedKey]) {
-      const generated = questionsGenerator[decodedKey]();
-      setCurrentQuestion(generated);
-    }
-  }, [decodedKey]);
 
   const initializeUserAnswer = (currentQuestion) => {
     if (currentQuestion?.type === "sequence") {
@@ -72,6 +60,13 @@ const QuizPage = () => {
       [currentQuestion._id]: newSequenceAnswers,
     });
   };
+
+  useEffect(() => {
+    if (questionsGenerator[decodedKey]) {
+      const generated = questionsGenerator[decodedKey]();
+      setCurrentQuestion(generated);
+    }
+  }, [decodedKey]);
 
   console.log("currentQn:", currentQuestion);
 
@@ -242,124 +237,32 @@ const QuizPage = () => {
     }
   };
 
-  // Generate next question
-  const generateNewQuestion = () => {
-    const question = questionsGenerator[decodedKey]();
-    setCurrentQuestion(question);
-    setUserAnswer("");
-    setSelectedAnswers([]);
-    setSelectedNumbers([]);
-    setFeedback("");
-    setShowResult(false);
-    setUserAnswers([]);
-    setShowhint(false);
-  };
-
-  // Handle submit logic
   const handleSubmit = () => {
-    if (!currentQuestion) return;
+    const correct = currentQuestion.correctAnswers;
+    let isAnswerCorrect = false;
 
-    const { type, answer, questionType } = currentQuestion;
-    const correctAnswers = Array.isArray(answer) ? answer : [answer];
-
-    // Validation
-    const isEmpty =
-      (type === "input" && !userAnswer) ||
-      (type === "mcq" && !userAnswer) ||
-      (type === "mcq-multiple" && selectedAnswers.length === 0) ||
-      (type === "number-line" && selectedNumbers.length === 0);
-
-    if (isEmpty) {
-      setFeedback("⚠️ Please provide an answer before submitting");
-      return;
+    if (currentQuestion.type === "smcq") {
+      // Single correct — just check if the chosen one matches
+      isAnswerCorrect = correct.includes(selectedOption);
+    } else {
+      // Multi correct — must match exactly
+      const selectedTrueOptions = Object.keys(selectedOptions).filter(
+        (key) => selectedOptions[key] && availableOptions.includes(key)
+      );
+      isAnswerCorrect =
+        selectedTrueOptions.length === correct.length &&
+        selectedTrueOptions.every((opt) => correct.includes(opt)) &&
+        correct.every((opt) => selectedTrueOptions.includes(opt));
     }
 
-    let isCorrect = false;
-    let feedbackMessage = "";
-
-    switch (type) {
-      case "mcq-multiple":
-        isCorrect =
-          correctAnswers.length === selectedAnswers.length &&
-          correctAnswers.every((ans) => selectedAnswers.includes(ans));
-        feedbackMessage = isCorrect
-          ? "🎉 Perfect! All correct answers selected!"
-          : `❌ Oops! Correct answers were: ${correctAnswers.join(", ")}`;
-        break;
-
-      case "number-line":
-        const missed = correctAnswers.filter(
-          (n) => !selectedNumbers.includes(n)
-        );
-        const extras = selectedNumbers.filter(
-          (n) => !correctAnswers.includes(n)
-        );
-        isCorrect = missed.length === 0 && extras.length === 0;
-
-        feedbackMessage = isCorrect
-          ? `🎉 Perfect! All ${questionType} numbers correct!`
-          : `❌ ${
-              questionType === "even" ? "Even" : "Odd"
-            } Number Practice:\n` +
-            (missed.length > 0
-              ? `Missed ${questionType} numbers: ${missed.join(", ")}\n`
-              : "") +
-            (extras.length > 0
-              ? `Incorrect selections: ${extras.join(", ")}\n`
-              : "") +
-            `Correct ${questionType} numbers: ${correctAnswers.join(
-              ", "
-            )}\n\n` +
-            `Tip: ${
-              questionType === "even"
-                ? "Even numbers end with 0, 2, 4, 6, or 8"
-                : "Odd numbers end with 1, 3, 5, 7, or 9"
-            }`;
-        break;
-
-      case "input":
-      case "mcq":
-        isCorrect =
-          userAnswer.toString().toLowerCase() ===
-          correctAnswers[0].toString().toLowerCase();
-        feedbackMessage = isCorrect
-          ? "🎉 Correct! Great job!"
-          : `❌ Not quite! The correct answer was: ${correctAnswers.join(
-              ", "
-            )}`;
-        break;
-      case "sequence":
-        const userSequenceAnswers = userAnswers[currentQuestion._id] || [];
-
-        isCorrect =
-          currentQuestion?.correctAnswers.length ===
-            userSequenceAnswers.length &&
-          currentQuestion?.correctAnswers.every(
-            (correctAns, i) =>
-              correctAns.toString().trim() ===
-              (userSequenceAnswers[i] ?? "").toString().trim()
-          );
-
-        feedbackMessage = isCorrect
-          ? "🎉 Well done! You completed the sequence correctly!"
-          : `❌ Not quite. Correct numbers were: ${correctAnswers.join(", ")}`;
-
-        break;
-
-      default:
-        feedbackMessage = "⚠️ Unknown question type";
-        break;
-    }
-
-    // setFeedback(feedbackMessage);
+    setIsCorrect(isAnswerCorrect);
     setShowResult(true);
-    // setTotalQuestions((prev) => prev + 1);
 
-    if (isCorrect) {
-      // setScore((prev) => prev + 1);
+    if (isAnswerCorrect) {
+      setSmartScore((prev) => Math.min(prev + 10, 100));
       setTimeout(() => {
-        generateNewQuestion();
-      }, 1000);
+        handleNextQuestion();
+      }, 1500);
     }
   };
 
@@ -381,18 +284,6 @@ const QuizPage = () => {
     }
   };
 
-  const readAloud = async (text) => {
-    setIsSpeaking(true);
-    try {
-      const audio = await window.puter.ai.txt2speech(text, "en-US");
-      audio.onended = () => setIsSpeaking(false);
-      audio.play();
-    } catch (err) {
-      alert("TTS error");
-      setIsSpeaking(false);
-    }
-  };
-
   const renderQuestionInput = () => {
     if (!currentQuestion) return null;
 
@@ -403,13 +294,9 @@ const QuizPage = () => {
             type={currentQuestion?.textType === "text" ? "text" : "number"}
             value={userAnswer}
             onChange={(e) => setUserAnswer(e.target.value)}
+            placeholder="Type your answer"
             disabled={showResult}
-            className="
-        border border-[#03a9f4] 
-        w-16 h-10 
-        text-center text-lg font-normal 
-        focus:outline-none focus:ring-2 focus:ring-[#03a9f4]
-      "
+            className="w-full max-w-xs text-center text-xl border-2 border-purple-300 p-3 rounded-xl focus:ring-2 focus:ring-purple-500 transition-all"
             autoComplete="off"
           />
         );
@@ -671,7 +558,7 @@ const QuizPage = () => {
       );
     }
     // Special styling for Skip-Counting Adventure
-    if (decodedKey === "Skip-Counting-pictures") {
+    if (decodedKey === "A.1 Skip-Counting-by-pictures") {
       return (
         <div className="flex flex-wrap justify-left gap-4 text-3xl p-4 bg-purple-50 rounded-lg">
           {currentQuestion.visuals.map((group, i) => (
@@ -715,8 +602,8 @@ const QuizPage = () => {
       <div className="bg-sky-200 text-xs text-gray-700 flex justify-between px-4 py-1 items-center select-none">
         <div className="flex items-center space-x-1">
           <span>Class IX</span>
-          <span>-</span>
-          <span>{topicId}</span>
+          <span>•</span>
+          <span>A.1 Classify numbers</span>
         </div>
         <button className="bg-white text-gray-700 text-xs px-3 py-1 rounded border border-gray-300 hover:bg-gray-100">
           Share skill
@@ -800,108 +687,13 @@ const QuizPage = () => {
             {/* Question & Dynamic Options */}
             {!showResult && !showKeepUp && (
               <>
-                <p className="text-xl text-center whitespace-pre-wrap text-gray-800 min-h-[4rem] flex items-center justify-left">
-                  <button
-                    onClick={() => readAloud(currentQuestion?.question)}
-                    disabled={isSpeaking}
-                    className="mr-2 text-xl text-purple-600 hover:text-purple-800 transition-colors"
-                    aria-label="Read aloud"
-                  >
-                    {isSpeaking ? <FiVolume /> : <FiVolume2 />}
-                  </button>
-
-                  <div>
-                    {currentQuestion?.passage && (
-                      <div className="mb-4">
-                        <h3 className="text-gray-700 font-semibold mb-2">
-                          Passage:
-                        </h3>
-                        <div className="bg-white/70 rounded-md p-3 border border-gray-200 text-gray-800 text-md">
-                          <ReactMarkdown>
-                            {currentQuestion.passage}
-                          </ReactMarkdown>
-                        </div>
-                      </div>
-                    )}
-                    {currentQuestion?.latex ? (
-                      <div className="text-xl text-gray-800 whitespace-pre-wrap break-words leading-relaxed">
-                        <ReactMarkdown
-                          remarkPlugins={[remarkGfm, remarkMath]}
-                          rehypePlugins={[rehypeKatex]}
-                        >
-                          {currentQuestion?.question}
-                        </ReactMarkdown>
-                      </div>
-                    ) : (
-                      <ReactMarkdown
-                        remarkPlugins={[remarkGfm]}
-                        components={{
-                          p: ({ children }) => (
-                            <p className="text-gray-900 text-sm mb-4 font-normal">
-                              {children}
-                            </p>
-                          ),
-                        }}
-                      >
-                        {currentQuestion?.question || ""}
-                      </ReactMarkdown>
-                    )}
-
-                    <div className="overflow-auto max-w-full px-2">
-                      <div
-                        className="w-full max-w-full"
-                        dangerouslySetInnerHTML={{
-                          __html: currentQuestion?.svg,
-                        }}
-                      />
-                    </div>
-
-                    <ReactMarkdown
-                      remarkPlugins={[remarkGfm]}
-                      components={{
-                        table: ({ node, ...props }) => (
-                          <table className="w-auto border border-gray-400 border-collapse mx-auto my-4 text-sm">
-                            {props.children}
-                          </table>
-                        ),
-                        thead: ({ node, ...props }) => (
-                          <thead className="bg-gray-100 text-center text-[14px]">
-                            {props.children}
-                          </thead>
-                        ),
-                        tr: ({ node, ...props }) => (
-                          <tr className="border-b border-gray-300 text-center">
-                            {props.children}
-                          </tr>
-                        ),
-                        th: ({ node, ...props }) => (
-                          <th className="border border-gray-400 px-2 py-1 font-semibold min-w-[100px]">
-                            {props.children}
-                          </th>
-                        ),
-                        td: ({ node, ...props }) => (
-                          <td className="border border-gray-300 px-2 py-1">
-                            {props.children}
-                          </td>
-                        ),
-                      }}
-                    >
-                      {currentQuestion?.table}
-                    </ReactMarkdown>
-                  </div>
-                </p>
                 {renderVisuals()}
 
                 <div className="flex justify-left">{renderQuestionInput()}</div>
 
                 <motion.button
-                  hileHover={{ scale: 1.05 }}
-                  className="
-    mt-6 bg-lime-700 text-white text-sm font-semibold 
-    px-6 py-2 rounded 
-    disabled:opacity-50 disabled:cursor-not-allowed
-    w-full sm:w-auto
-  "
+                  whileHover={{ scale: 1.05 }}
+                  className="mt-6 bg-lime-700 text-white text-sm font-semibold px-6 py-2 rounded disabled:opacity-50 disabled:cursor-not-allowed w-full md:w-auto"
                   onClick={handleSubmit}
                   // disabled={Object.keys(selectedOptions).every(
                   //   (key) =>

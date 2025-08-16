@@ -29,6 +29,16 @@ const KidFriendlyPage = () => {
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [isPuterReady, setIsPuterReady] = useState(false);
   const [showhint, setShowhint] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
   const handleCorrectAnswer = () => {
     setScore((prev) => prev + 1);
@@ -97,18 +107,6 @@ const KidFriendlyPage = () => {
     }
   };
 
-  // Generate next question
-  const generateNewQuestion = () => {
-    const question = questionsGenerator[decodedKey]();
-    setCurrentQuestion(question);
-    setUserAnswer("");
-    setSelectedAnswers([]);
-    setSelectedNumbers([]);
-    setFeedback("");
-    setShowResult(false);
-    setUserAnswers([]);
-    setShowhint(false);
-  };
 
   console.log("currentQuestion", currentQuestion);
 
@@ -126,6 +124,19 @@ const KidFriendlyPage = () => {
       return Array(nullCount).fill("");
     }
     return "";
+  };
+
+    // Generate next question
+  const generateNewQuestion = () => {
+    const question = questionsGenerator[decodedKey]();
+    setCurrentQuestion(question);
+    setUserAnswer("");
+    setSelectedAnswers([]);
+    setSelectedNumbers([]);
+    setFeedback("");
+    setShowResult(false);
+    setUserAnswers([]);
+    setShowhint(false);
   };
 
   // Handle submit logic
@@ -595,6 +606,7 @@ const KidFriendlyPage = () => {
 
             <button onClick={() => setShowhint(!showhint)}>hint</button>
           </div>
+         
           {showhint && (
             <ReactMarkdown remarkPlugins={[remarkGfm]}>
               {currentQuestion?.hint}
@@ -687,6 +699,7 @@ const KidFriendlyPage = () => {
           {renderVisuals()}
 
           <div className="flex justify-left">{renderQuestionInput()}</div>
+          {/* Right panel (desktop only) */}
 
           {!showResult ? (
             <div className="text-center pt-4">
