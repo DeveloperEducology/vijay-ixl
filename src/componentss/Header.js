@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 
 function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -10,16 +11,19 @@ function Header() {
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           {/* Logo + Mobile Toggle */}
           <div className="flex items-center justify-between w-full md:w-auto">
-            <img
-              alt="IXL Logo"
-              className="h-6 w-auto"
-              src="https://www.ixl.com/favicon.ico"
-            />
+            <a href="/">
+              <img
+                alt="IXL Logo"
+                className="h-6 w-auto"
+                src="https://www.ixl.com/favicon.ico"
+              />
+            </a>
 
             {/* Mobile Menu Button */}
             <button
               className="md:hidden text-gray-500 hover:text-gray-700"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              aria-label="Toggle Menu"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -123,56 +127,68 @@ function Header() {
           </div>
         </div>
 
-        {/* Mobile Menu */}
-        {mobileMenuOpen && (
-          <div className="md:hidden mt-3 space-y-3">
-            <form className="px-4">
-              <input
-                type="search"
-                placeholder="Search topics"
-                className="w-full py-1 px-3 border border-gray-300 rounded"
-              />
-            </form>
-            <div className="px-4 flex flex-col gap-2">
-              <input
-                type="text"
-                placeholder="Username"
-                className="px-2 py-1 border border-gray-300 rounded text-sm"
-              />
-              <input
-                type="password"
-                placeholder="Password"
-                className="px-2 py-1 border border-gray-300 rounded text-sm"
-              />
-              <button className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded font-medium">
-                Sign in
-              </button>
-            </div>
-            <nav className="bg-green-600 text-white">
-              <div className="max-w-7xl mx-auto flex justify-between items-center">
-                <ul className="flex gap-8 px-4 py-3">
-                  <li className="font-serif text-lg cursor-pointer hover:underline">
-                    Learning
-                  </li>
-                  <li className="font-serif text-lg cursor-pointer hover:underline">
-                    Analytics
-                  </li>
-                </ul>
-                <button className="bg-teal-400 hover:bg-teal-500 px-6 py-3 font-serif text-lg cursor-pointer">
-                  JOIN NOW
+        {/* Mobile Menu with Animation */}
+        <AnimatePresence>
+          {mobileMenuOpen && (
+            <motion.div
+              initial={{ y: -20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: -20, opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              className="md:hidden mt-3 space-y-3"
+            >
+              <form className="px-4">
+                <input
+                  type="search"
+                  placeholder="Search topics"
+                  className="w-full py-1 px-3 border border-gray-300 rounded"
+                />
+              </form>
+              <div className="px-4 flex flex-col gap-2">
+                <input
+                  type="text"
+                  placeholder="Username"
+                  className="px-2 py-1 border border-gray-300 rounded text-sm"
+                />
+                <input
+                  type="password"
+                  placeholder="Password"
+                  className="px-2 py-1 border border-gray-300 rounded text-sm"
+                />
+                <button className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded font-medium">
+                  Sign in
                 </button>
               </div>
-            </nav>
-          </div>
-        )}
+              <nav className="bg-green-600 text-white">
+                <div className="max-w-7xl mx-auto flex justify-between items-center">
+                  <ul className="flex gap-8 px-4 py-3">
+                    <li className="font-serif text-lg cursor-pointer hover:underline">
+                      <a href="/ixl-home" className="text-white">
+                        Learning
+                      </a>
+                    </li>
+                    <li className="font-serif text-lg cursor-pointer hover:underline">
+                      Analytics
+                    </li>
+                  </ul>
+                  <button className="bg-teal-400 hover:bg-teal-500 px-6 py-3 font-serif text-lg cursor-pointer">
+                    JOIN NOW
+                  </button>
+                </div>
+              </nav>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </header>
 
-      {/* Navigation */}
+      {/* Navigation (Desktop) */}
       <nav className="bg-green-600 text-white hidden md:block">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <ul className="flex gap-8 px-4 py-3">
             <li className="font-serif text-lg cursor-pointer hover:underline">
-              Learning
+              <a href="/ixl-home" className="text-white">
+                Learning
+              </a>
             </li>
             <li className="font-serif text-lg cursor-pointer hover:underline">
               Analytics
