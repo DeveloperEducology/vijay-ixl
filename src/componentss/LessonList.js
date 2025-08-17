@@ -21,22 +21,22 @@ const LessonList = () => {
 
   const renderColumn = (column) =>
     column.map((topic) => (
-      <div key={topic.code}>
-        <h2 className="text-[15px] font-bold mb-1 text-[#8a8a8a] mt-5 first:mt-0">
+      <div key={topic.code} style={topic.style} className="mb-4">
+        <h2 className="text-[17px] font-bold mb-1 text-[#447a05] mt-5 first:mt-0">
           {topic.category}
         </h2>
         <ul className="list-none space-y-0.5">
-          {topic.items.map((item) => (
+          {topic.items.map((item, index) => (
             <li
               key={item.id}
-              className="text-[12px] gray-800 hover:text-[#00a1e0]"
+              className="text-[14px] gray-800 hover:text-[#00a1e0]"
             >
               <button
                 onClick={() => navigate(`/quiz/${item.id}`)}
                 className="text-left hover:underline cursor-pointer w-full"
               >
-                <span className="font-semibold" style={{ color: topic.color }}>
-                  {/* {topic.code}.{item.id.split("-").pop()} */}
+                <span className="font-semibold">
+                  {topic.code}.{index + 1}
                 </span>{" "}
                 {item.name}
               </button>

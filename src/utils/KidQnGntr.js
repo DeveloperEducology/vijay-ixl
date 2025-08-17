@@ -386,7 +386,7 @@ export const questionsGenerator = {
       options: ["Even", "Odd"],
     };
   },
-  "A.11 Skip-counting stories": () => {
+  "Skip-counting-stories": () => {
     const rubiesPerBracelet = Math.floor(Math.random() * 8) + 2; // 1 to 4 rubies
     const totalBracelets = Math.floor(Math.random() * 9) + 2;
 
@@ -432,7 +432,7 @@ export const questionsGenerator = {
       options,
     };
   },
-  "A.12 Skip-counting puzzles": () => {
+  "Skip-counting-puzzles": () => {
     const start = Math.floor(Math.random() * 20) * 5 + 10; // 10, 15, ..., 105
     const stepOptions = [2, 5, 10];
     const step = stepOptions[Math.floor(Math.random() * stepOptions.length)];
@@ -441,21 +441,50 @@ export const questionsGenerator = {
     const path = Array.from({ length: maxSteps }, (_, i) => start + i * step);
 
     const includeTarget = Math.random() < 0.7; // 70% chance of reachable
-    const target = includeTarget
-      ? path[Math.floor(Math.random() * path.length)]
-      : start + step * maxSteps + step * (Math.floor(Math.random() * 3) + 1);
 
-    const answer = path.includes(target) ? "yes" : "no";
+    let target;
+    if (includeTarget) {
+      // ✅ Pick an actual number from the sequence
+      target = path[Math.floor(Math.random() * path.length)];
+    } else {
+      // ❌ Force a number that breaks the sequence pattern
+      const offset = Math.floor(Math.random() * (step - 1)) + 1; // between 1 and step-1
+      target =
+        start + step * (maxSteps + Math.floor(Math.random() * 3) + 1) + offset;
+    }
+
+    // ✅ Correct formula check
+    const isInSequence = (target - start) % step === 0 && target >= start;
+    const answer = isInSequence ? "yes" : "no";
+
+    const explanation = [
+      `Karen starts at ${start}.`,
+      `She skip-counts by ${step}.`,
+      `The sequence is: ${path.join(", ")} ... (and it keeps going).`,
+      `We check if ${target} fits the pattern using: (target - start) ÷ step.`,
+      `${target} ${isInSequence ? "does" : "does not"} fit.`,
+      `Therefore, the answer is **${answer}**.`,
+    ];
+
+    const example = [
+      `Example: If Karen starts at 10 and skip-counts by 5s,\n` +
+        `the sequence is 10, 15, 20, 25, ...\n` +
+        `If asked whether 35 is in the sequence,\n` +
+        `we check (35 - 10) ÷ 5 = 5, which is a whole number.\n` +
+        `So the answer is **yes**.`,
+    ];
 
     return {
       type: "mcq",
       question: `**Karen began at ${start}. She skip-counted by ${step}s. Could she have said the number ${target}?**`,
       answer,
       options: ["yes", "no"],
+      explanation,
+      example,
     };
   },
 
-  "A.8 Select even or odd numbers": () => {
+  Select_evenorodd_numbers: () => {
     const numbers = [];
     const evenNumbers = [];
     const oddNumbers = [];
@@ -523,7 +552,7 @@ export const questionsGenerator = {
     };
   },
 
-  "➕ Add 2 Numbers": () => {
+  "Add 2 Numbers": () => {
     const a = Math.floor(Math.random() * 50);
     const b = Math.floor(Math.random() * 50);
     return {

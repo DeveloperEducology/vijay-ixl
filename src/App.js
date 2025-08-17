@@ -35,7 +35,7 @@ function App() {
       <Route
         path="/*"
         element={
-          <div className="flex justify-center">Not found any Page404</div>
+          <IXLHomePage />
         }
       />
     </Routes>

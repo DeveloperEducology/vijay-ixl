@@ -32,7 +32,7 @@ export const class2LessonData = [
         name: "Identify numbers as even or odd",
       },
       {
-        id: "counting-and-number-patterns-8",
+        id: "Select_evenorodd_numbers",
         name: "Select even or odd numbers",
       },
       {
@@ -44,11 +44,11 @@ export const class2LessonData = [
         name: "Which ever odd or even number comes before or after?",
       },
       {
-        id: "counting-and-number-patterns-11",
+        id: "Skip-counting-stories",
         name: "Skip-counting stories",
       },
       {
-        id: "counting-and-number-patterns-12",
+        id: "Skip-counting-puzzles",
         name: "Skip-counting puzzles",
       },
     ],

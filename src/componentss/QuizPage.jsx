@@ -110,6 +110,7 @@ const QuizPage = () => {
     setSelectedAnswers([]);
     setFeedback("");
     setShowResult(false);
+    setQuestionsAnswered((prev) => prev + 1);
     setShowhint(false);
   };
 
@@ -226,10 +227,14 @@ const QuizPage = () => {
     setTimerRunning(false);
 
     if (isCorrect) {
+      // Increase score but cap at 100
       setSmartScore((prev) => Math.min(prev + 10, 100));
       setTimeout(() => {
         generateNewQuestion();
       }, 1000);
+    } else {
+      // Decrease score but don’t let it go below 0
+      setSmartScore((prev) => Math.max(prev - 5, 0));
     }
   };
 
@@ -269,7 +274,7 @@ const QuizPage = () => {
   "
             autoComplete="off"
             autoFocus // Corrected to camelCase
-            ref={(input) => input && input.focus()} // More reliable focus handling
+            // ref={(input) => input && input.focus()} // More reliable focus handling
           />
         );
 
@@ -383,7 +388,8 @@ const QuizPage = () => {
       case "mcq-multiple":
         return (
           <div className="flex flex-col gap-4 items-center w-full">
-            <div className="flex flex-wrap gap-6 justify-center">
+            {/* Options */}
+            <div className="flex flex-col md:flex-row md:flex-wrap gap-3 w-full justify-left">
               {currentQuestion?.options.map((option) => {
                 const isSelected = selectedAnswers.includes(option);
                 const isCorrect =
@@ -394,36 +400,63 @@ const QuizPage = () => {
                   !currentQuestion.answer.includes(option);
 
                 return (
-                  <button
+                  <motion.label
                     key={option}
+                    role="checkbox"
+                    aria-checked={isSelected}
+                    whileHover={{ scale: 1.02 }}
+                    className={`flex items-center rounded border w-full md:w-auto pr-5 h-12 cursor-pointer select-none transition-all duration-200 ${
+                      isCorrect
+                        ? "border-green-600 bg-green-200"
+                        : isWrong
+                        ? "border-red-600 bg-red-200"
+                        : isSelected
+                        ? "border-purple-600 bg-purple-200"
+                        : "border-sky-300 bg-white"
+                    }`}
                     onClick={() => handleMultipleSelect(option)}
-                    disabled={showResult}
-                    className={`text-center p-3 rounded-xl cursor-pointer text-lg font-medium border-2 transition-all min-w-[100px]
-                      ${isCorrect ? "bg-green-200 border-green-500" : ""}
-                      ${isWrong ? "bg-red-200 border-red-500" : ""}
-                      ${
-                        isSelected && !showResult
-                          ? "bg-purple-200 border-purple-400 scale-105"
-                          : ""
-                      }
-                      ${
-                        !isSelected && !showResult
-                          ? "bg-white border-gray-300 hover:border-purple-300"
-                          : ""
-                      }
-                      ${showResult ? "opacity-100" : ""}
-                    `}
                   >
-                    {currentQuestion?.latex ? (
-                      <InlineMath math={option} />
-                    ) : (
-                      option
-                    )}
-                  </button>
+                    <div
+                      className={`w-8 h-12 flex justify-center items-center rounded-l ${
+                        isCorrect
+                          ? "bg-green-500"
+                          : isWrong
+                          ? "bg-red-500"
+                          : isSelected
+                          ? "bg-purple-500"
+                          : "bg-sky-300"
+                      }`}
+                    >
+                      {isSelected && (
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-4 w-4 text-white"
+                          fill="none"
+                          viewBox="0 0 20 20"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M5 13l4 4L19 7"
+                          />
+                        </svg>
+                      )}
+                    </div>
+                    <span className="text-gray-900 text-sm pl-4 whitespace-nowrap">
+                      {currentQuestion?.latex ? (
+                        <InlineMath math={option} />
+                      ) : (
+                        option
+                      )}
+                    </span>
+                  </motion.label>
                 );
               })}
             </div>
 
+            {/* Feedback */}
             {showResult &&
               selectedAnswers.length > 0 &&
               currentQuestion.feedbackPerOption && (
@@ -439,6 +472,7 @@ const QuizPage = () => {
                 </div>
               )}
 
+            {/* Explanation */}
             {showResult && currentQuestion.explanation && (
               <div className="mt-4 text-md text-gray-800 bg-white/80 border-l-4 border-purple-400 p-3 rounded-md max-w-lg">
                 <strong>Explanation:</strong>
@@ -505,7 +539,7 @@ const QuizPage = () => {
           <motion.div
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            transition={{ type: "tween", stiffness: 300, damping: 20 }}
+            transition={{ type: "keyframes", stiffness: 300, damping: 20 }}
             className="inline-flex flex-wrap gap-2 sm:gap-4 p-2 sm:p-4 rounded-lg"
           >
             {currentQuestion.visuals.map((group, i) => (
@@ -513,7 +547,11 @@ const QuizPage = () => {
                 key={i}
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
-                transition={{ delay: i * 0.05, type: "spring", stiffness: 300 }}
+                transition={{
+                  delay: i * 0.05,
+                  type: "keyframes",
+                  stiffness: 300,
+                }}
                 className="p-1 sm:p-2 border-2 border-dashed border-purple-200 rounded-md text-3xl sm:text-5xl"
               >
                 {group}
@@ -606,58 +644,64 @@ const QuizPage = () => {
             <div>
               <button
                 onClick={() => setShowExample((prev) => !prev)}
-                className="text-[#03a9f4] font-semibold text-lg justify-center leading-6 hover:underline"
+                className="text-[#03a9f4] font-semibold text-sm justify-center leading-6 hover:underline"
               >
                 Learn with an example
               </button>
 
-<AnimatePresence>
-  {showExample && currentQuestion?.example && (
-    <motion.div
-      key="example"
-      initial={{ height: 0, opacity: 0, x: -20 }}
-      animate={{ height: "auto", opacity: 1, x: 0 }}
-      exit={{ height: 0, opacity: 0, x: -20 }}
-      transition={{ duration: 0.4, ease: "easeInOut" }}
-      className="overflow-hidden mt-3"
-    >
-      <div className="flex items-start gap-2">
-        {/* Read aloud button */}
-        <button
-          onClick={() => readAloud(currentQuestion?.example)}
-          disabled={isSpeaking}
-          className="text-xl text-purple-600 hover:text-purple-800 transition-colors flex-shrink-0 mt-1"
-          aria-label="Read aloud"
-        >
-          {isSpeaking ? <FiVolume /> : <FiVolume2 />}
-        </button>
+              <AnimatePresence>
+                {showExample && currentQuestion?.example && (
+                  <motion.div
+                    key="example"
+                    initial={{ height: 0, opacity: 0, x: -20 }}
+                    animate={{ height: "auto", opacity: 1, x: 0 }}
+                    exit={{ height: 0, opacity: 0, x: -20 }}
+                    transition={{ duration: 0.4, ease: "easeInOut" }}
+                    className="overflow-hidden mt-3"
+                  >
+                    <div className="flex items-start gap-2">
+                      {/* Read aloud button */}
 
-        <div className="p-3 bg-blue-50 rounded-lg border border-blue-200 flex-1">
-          <h4 className="text-blue-700 font-semibold mb-2">Example</h4>
-          <ul className="list-disc list-inside space-y-1 text-gray-800 text-sm">
-            {currentQuestion.example.map((step, i) => (
-              <li key={i}>{step}</li>
-            ))}
-          </ul>
+                      <button
+                        onClick={() =>
+                          readAloud((currentQuestion?.example || []).join(" "))
+                        }
+                        disabled={isSpeaking}
+                        className="text-xl text-purple-600 hover:text-purple-800 transition-colors flex-shrink-0 mt-1"
+                        aria-label="Read aloud"
+                      >
+                        {isSpeaking ? <FiVolume /> : <FiVolume2 />}
+                      </button>
 
-          {currentQuestion.explanation && (
-            <>
-              <h4 className="text-blue-700 font-semibold mt-4 mb-2">
-                Step-by-step explanation
-              </h4>
-              <ul className="list-disc list-inside space-y-1 text-gray-800 text-sm">
-                {currentQuestion.explanation.map((step, i) => (
-                  <li key={i}>{step}</li>
-                ))}
-              </ul>
-            </>
-          )}
-        </div>
-      </div>
-    </motion.div>
-  )}
-</AnimatePresence>
+                      <div className="p-3 bg-blue-50 rounded-lg border border-blue-200 flex-1">
+                        <h4 className="text-blue-700 font-semibold mb-2">
+                          Example
+                        </h4>
+                        <ul className="list-disc list-inside space-y-1 text-gray-800 text-sm">
+                          {currentQuestion.example.map((step, i) => (
+                            <li key={i}>
+                              <ReactMarkdown>{step}</ReactMarkdown>
+                            </li>
+                          ))}
+                        </ul>
 
+                        {/* {currentQuestion.explanation && (
+                          <>
+                            <h4 className="text-blue-700 font-semibold mt-4 mb-2">
+                              Step-by-step explanation
+                            </h4>
+                            <ul className="list-disc list-inside space-y-1 text-gray-800 text-sm">
+                              {currentQuestion.explanation.map((step, i) => (
+                                <li key={i}>{step}</li>
+                              ))}
+                            </ul>
+                          </>
+                        )} */}
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
             {/* Keep Up Feedback */}
             {showKeepUp && (
