@@ -1,3 +1,6 @@
+import { number } from "framer-motion";
+import { ReactComponent as BearIcon } from "../assets/bear.svg";
+
 export const generateNumberLineQuestion = () => {
   const start = Math.floor(Math.random() * 10) - 5; // -5 to 5
   const end = start + 6; // Always show 7 numbers
@@ -35,6 +38,18 @@ export const getOrdinalSuffix = (num) => {
     default:
       return "th";
   }
+};
+
+// ✅ helper for random numbers
+const generateRandomNumbers = (count, min, max, unique = true) => {
+  const numbers = [];
+  while (numbers.length < count) {
+    const value = Math.floor(Math.random() * (max - min + 1)) + min;
+    if (!unique || !numbers.some((n) => n.value === value)) {
+      numbers.push({ id: numbers.length + 1, value });
+    }
+  }
+  return numbers;
 };
 
 // Helper for circle segment math
@@ -194,6 +209,54 @@ export const questionsGenerator = {
     };
   },
 
+  "Skip-image-count": () => {
+    // Illustrations with item count per picture
+    const items = [
+      {
+        name: "cinnamon roll",
+        plural: "cinnamon rolls",
+        img: "https://storage.googleapis.com/a1aa/image/d9c74b00-ea2b-45ab-19b7-5499a2de36d2.jpg",
+        perImage: 10, // one plate has 10 rolls
+      },
+      {
+        name: "donut",
+        plural: "donuts",
+        img: "https://img.freepik.com/premium-vector/chocolate-donuts-with-sprinkles-cartoon-fast-food-icons-signs-plate-vector-illustration_875663-3.jpg",
+        perImage: 3, // one plate has 3 donuts
+      },
+      {
+        name: "apple",
+        plural: "apples",
+        img: "https://img.freepik.com/premium-vector/vector-illustration-apple-basket_593183-263.jpg?semt=ais_hybrid&w=740&q=80",
+        perImage: 5, // one basket has 5 apples
+      },
+      {
+        name: "book",
+        plural: "books",
+        img: "https://static.vecteezy.com/system/resources/previews/009/871/909/non_2x/five-books-lined-up-cartoon-illustration-vector.jpg",
+        perImage: 5, // one stack has 5 books
+      },
+    ];
+
+    // Pick random item type
+    const item = items[Math.floor(Math.random() * items.length)];
+
+    // Randomize number of images (2–6)
+    const numImages = Math.floor(Math.random() * 5) + 2;
+
+    // Total = numImages × items per picture
+    const total = numImages * item.perImage;
+
+    return {
+      type: "input",
+      exampleText: "Learn with an example",
+      prompt: `How many **${item.name}s** are there in total?`,
+      question: `Count the ${item.plural} by ${item.perImage}s.`,
+      images: Array(numImages).fill(item.img),
+      answer: total.toString(),
+      hint: `There are ${numImages} pictures. Each has ${item.perImage} ${item.plural}.`,
+    };
+  },
   "Skip-Counting-pictures": () => {
     const candies = [
       { emoji: "🍭", name: "lollipops" },
@@ -201,32 +264,137 @@ export const questionsGenerator = {
       { emoji: "🍫", name: "chocolates" },
       { emoji: "🧁", name: "cupcakes" },
       { emoji: "🍩", name: "donuts" },
-      { emoji: "🦄", name: "unicorns" },
-      { emoji: "🚁", name: "helicopters" },
-      { emoji: "🛩️", name: "airplanes" },
+      { emoji: "🎈", name: "balloons" },
+      // { image: BearIcon, name: "bears" }, // inline SVG
+      // { image: require("../assets/banana.png"), name: "bananas" }, // local PNG
     ];
-    const steps = [2, 3, 5, 10];
+
+    const steps = [1, 2, 3, 5, 10];
     const step = steps[Math.floor(Math.random() * steps.length)];
-    const numGroups = Math.floor(Math.random() * 5) + 2; // 2 to 6 groups
-    const { emoji, name } = candies[Math.floor(Math.random() * candies.length)];
+    const numGroups = Math.floor(Math.random() * 5) + 2; // 2..6 groups
+    const item = candies[Math.floor(Math.random() * candies.length)];
     const total = step * numGroups;
 
-    // Create visual groups for rendering in React
-    const visualGroups = Array.from({ length: numGroups }, () =>
-      emoji.repeat(step)
-    );
+    // ✅ Each group contains styled children
+    const visualGroups = Array.from({ length: numGroups }, (_, gi) => {
+      const children = Array.from({ length: step }, (_, j) => {
+        if (item.emoji) {
+          return (
+            <span key={`${gi}-${j}`} className="text-3xl sm:text-4xl">
+              {item.emoji}
+            </span>
+          );
+        }
+        if (item.image) {
+          return typeof item.image === "string" ? (
+            <img
+              key={`${gi}-${j}`}
+              src={item.image}
+              alt={item.name}
+              className="w-15 h-15 sm:w-18 sm:h-18 object-contain"
+            />
+          ) : (
+            <item.image
+              key={`${gi}-${j}`}
+              aria-label={item.name}
+              className="w-10 h-10 sm:w-14 sm:h-14"
+            />
+          );
+        }
+        return null;
+      });
 
-    // Step-by-step explanation for a 5-year-old
+      // ✅ put flex + wrapping here, not on each child
+      return (
+        <div
+          key={gi}
+          className="p-2 sm:p-3 border-2 border-dashed border-purple-300 
+                 rounded-xl flex flex-wrap gap-2 bg-white shadow-sm"
+        >
+          {children}
+        </div>
+      );
+    });
+
     const explanation = [
-      `Look at each group of ${name}.`,
-      `Each group has **${step}** ${name}.`,
+      `Look at each group of ${item.name}.`,
+      `Each group has **${step}** ${item.name}.`,
       `We need to find out how many there are in total.`,
       `Instead of counting one by one, we skip-count by ${step}s.`,
       `Say the numbers out loud: ${Array.from(
         { length: numGroups },
         (_, i) => (i + 1) * step
       ).join(", ")}.`,
-      `The last number you say is the total number of ${name}.`,
+      `The last number you say is the total number of ${item.name}.`,
+    ];
+
+    const example = [
+      "Example: There are 3 groups of cupcakes. Each group has 2 cupcakes.",
+      "We count by 2s: 2, 4, 6.",
+      "So, there are 6 cupcakes in total.",
+    ];
+
+    return {
+      type: "input1",
+      question: `Count by **${step}s**:`,
+      prompt: `How many **${item.name}** are there in total?`,
+      answer: total.toString(),
+      visuals: visualGroups, // ✅ already styled
+      options: [],
+      explanation,
+      example,
+    };
+  },
+
+  "Skip-Counting-picture": () => {
+    const candies = [
+      // { emoji: "🍭", name: "lollipops" },
+      // { emoji: "🍬", name: "candies" },
+      // { emoji: "🍫", name: "chocolates" },
+      // { emoji: "🧁", name: "cupcakes" },
+      // { emoji: "🍩", name: "donuts" },
+      // { emoji: "🦄", name: "unicorns" },
+      // { emoji: "🚁", name: "helicopters" },
+      // { emoji: "🛩️", name: "airplanes" },
+      // { emoji: "🚀", name: "rockets" },
+      // { emoji: "🐶", name: "dogs" },
+      // { emoji: "🐱", name: "cats" },
+      // { emoji: "⚽", name: "footballs" },
+      // { emoji: "🏀", name: "basketballs" },
+      // { emoji: "🚗", name: "cars" },
+      // { emoji: "🚲", name: "bicycles" },
+      // { emoji: "🛴", name: "scooters" },
+      // { emoji: "🎈", name: "balloons" },
+      // { emoji: "🎉", name: "party poppers" },
+      // { emoji: "🎂", name: "birthday cakes" },
+      // { emoji: "🍎", name: "apples" },
+      // { emoji: "🍊", name: "oranges" },
+      { image: require("../assets/banana.png"), name: "banana" },
+      { image: require("../assets/bear.svg"), name: "bear" },
+    ];
+
+    const steps = [2, 3, 5, 10];
+    const step = steps[Math.floor(Math.random() * steps.length)];
+    const numGroups = Math.floor(Math.random() * 5) + 2; // 2 to 6 groups
+    const item = candies[Math.floor(Math.random() * candies.length)];
+    const total = step * numGroups;
+
+    // Create visual groups (emoji repeat OR image repeat)
+    const visualGroups = Array.from({ length: numGroups }, () =>
+      item.emoji ? item.emoji.repeat(step) : Array(step).fill(item.image)
+    );
+
+    // Step-by-step explanation for a 5-year-old
+    const explanation = [
+      `Look at each group of ${item.name}.`,
+      `Each group has **${step}** ${item.name}.`,
+      `We need to find out how many there are in total.`,
+      `Instead of counting one by one, we skip-count by ${step}s.`,
+      `Say the numbers out loud: ${Array.from(
+        { length: numGroups },
+        (_, i) => (i + 1) * step
+      ).join(", ")}.`,
+      `The last number you say is the total number of ${item.name}.`,
     ];
 
     // Example problem & solution
@@ -239,7 +407,7 @@ export const questionsGenerator = {
     return {
       type: "input",
       question: `Count by **${step}s**:`,
-      prompt: `How many **${name}** are there in total?`,
+      prompt: `How many **${item.name}** are there in total?`,
       answer: total.toString(),
       visuals: visualGroups,
       options: [],
@@ -370,6 +538,7 @@ export const questionsGenerator = {
       question: `Is the number of **${randomEmoji}s** Even or Odd?`,
       answer: answer,
       visuals: visualEmojis,
+      single: true, // Show only one type of emoji
       options: ["Even", "Odd"],
     };
   },
@@ -2279,6 +2448,19 @@ Time = ${totalLength} ÷ ${relativeSpeed} = ${Math.round(time)} sec`,
     };
   },
 
+  Sorting: () => {
+    const items = generateRandomNumbers(5, 1, 99, true);
+    const orderType = Math.random() > 0.5 ? "asc" : "desc";
+
+    return {
+      type: "sorting",
+      question: `Sort the Numbers in ${
+        orderType === "asc" ? "Ascending" : "Descending"
+      } Order`,
+      items,
+      orderType,
+    };
+  },
   // Example usage:
   // const question = ordinalEmojiGenerator();
   // console.log(question);

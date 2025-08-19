@@ -11,6 +11,7 @@ import LessonList from "./componentss/LessonList";
 import IXLHomePage from "./componentss/IXLHomePage";
 import SSC_CHSL_MockTest from "./componentss/SSC_CHSL_MockTest";
 import Vijay from "./componentss/Vijay";
+import TestUI from "./pages/TestUI";
 
 function App() {
   return (
@@ -27,6 +28,7 @@ function App() {
       <Route path="/sorting" element={<SortingComponent />} />
       <Route path="/ssc" element={<SSC_CHSL_MockTest />} />
       <Route path="/kid-math" element={<MathTopicsList />} />
+      <Route path="/testui" element={<TestUI />} />
       <Route path="/quiz/:topicId" element={<QuizPage />} />
 
       <Route path="/kid/:topicId" element={<KidFriendlyPage />} />

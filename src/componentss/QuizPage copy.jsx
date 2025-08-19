@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { motion } from "framer-motion";
-import MultiCorrectMcq from "./MultiCorrectMcq";
-import SingleCorrectMcq from "./SingleCorrectMcq";
+import { motion, AnimatePresence, acceleratedValues } from "framer-motion";
 import { useParams } from "react-router-dom";
 import { questionsGenerator } from "../utils/KidQnGntr";
 import ReactMarkdown from "react-markdown";
@@ -11,182 +9,41 @@ import { InlineMath } from "react-katex";
 import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
 import { FiVolume, FiVolume2 } from "react-icons/fi";
+import SortingQuestion from "../pages/SortingQuestion";
+import BlankInputComponent from "../pages/BlankInputComponent";
 
 const QuizPage = () => {
   const { topicId } = useParams();
   const [isSpeaking, setIsSpeaking] = useState(false);
-  const [selectedOption, setSelectedOption] = useState(null); // for SMCQ
-  const [selectedOptions, setSelectedOptions] = useState({}); // for MCQ
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [questionsAnswered, setQuestionsAnswered] = useState(0);
   const [smartScore, setSmartScore] = useState(0);
-  const [selectedAnswers, setSelectedAnswers] = useState([]); // mcq-multiple
+  const [correctAnswers, setCorrectAnswers] = useState([]);
+  const [showExample, setShowExample] = useState(false);
+  const [answer, setAnswer] = useState(null);
   const [timeElapsed, setTimeElapsed] = useState(0);
-  const [timerRunning, setTimerRunning] = useState(false);
+  const [timerRunning, setTimerRunning] = useState(true);
   const [showResult, setShowResult] = useState(false);
   const [isCorrect, setIsCorrect] = useState(false);
   const [showKeepUp, setShowKeepUp] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [currentQuestion, setCurrentQuestion] = useState(null);
   const [userAnswer, setUserAnswer] = useState("");
-  const [userAnswers, setUserAnswers] = useState("");
-  const [selectedNumbers, setSelectedNumbers] = useState([]); // for number-line
+  const [userAnswers, setUserAnswers] = useState({});
+  const [selectedAnswers, setSelectedAnswers] = useState([]);
   const [feedback, setFeedback] = useState("");
   const [showhint, setShowhint] = useState(false);
 
   const decodedKey = decodeURIComponent(topicId);
-  console.log(decodedKey);
-  console.log(questionsGenerator);
 
+  // Initialize questions
   useEffect(() => {
     if (questionsGenerator[decodedKey]) {
       const generated = questionsGenerator[decodedKey]();
       setCurrentQuestion(generated);
+      setTimerRunning(true);
     }
   }, [decodedKey]);
-
-  const initializeUserAnswer = (currentQuestion) => {
-    if (currentQuestion?.type === "sequence") {
-      const nullCount =
-        currentQuestion?.type === "sequence"
-          ? currentQuestion?.sequences
-            ? currentQuestion?.sequences.filter((item) => item === null).length
-            : currentQuestion.correctAnswers.length
-          : currentQuestion.question.reduce(
-              (count, str) => count + (str.match(/null/g) || []).length,
-              0
-            );
-      return Array(nullCount).fill("");
-    }
-    return "";
-  };
-
-  const handleAnswerChange = (e, index) => {
-    const value = e.target.value; // always string
-    const prevSequenceAnswers =
-      userAnswers[currentQuestion._id] || initializeUserAnswer(currentQuestion);
-    const newSequenceAnswers = [...prevSequenceAnswers];
-    newSequenceAnswers[index] = value;
-    setUserAnswers({
-      ...userAnswers,
-      [currentQuestion._id]: newSequenceAnswers,
-    });
-  };
-
-  console.log("currentQn:", currentQuestion);
-
-  const formatTime = (seconds) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return {
-      mins: mins.toString().padStart(2, "0"),
-      secs: secs.toString().padStart(2, "0"),
-    };
-  };
-
-  // Questions with dynamic availableOptions
-  const questions = [
-    {
-      number: 1,
-      type: "mmcq",
-      question: "Which of the following countries are part of the G7 group?",
-      correctAnswers: ["Canada", "Japan", "Germany"],
-      availableOptions: ["Canada", "Japan", "Germany", "Brazil", "India"],
-      explanation:
-        "The G7 includes Canada, Japan, Germany, the United States, the United Kingdom, France, and Italy. Brazil and India are not members.",
-    },
-    {
-      number: 2,
-      type: "smcq",
-      question: "Which planet is known as the Red Planet?",
-      correctAnswers: ["Mars"],
-      availableOptions: ["Mars", "Jupiter", "Venus"],
-      explanation:
-        "Mars is called the Red Planet due to the presence of iron oxide on its surface.",
-    },
-    {
-      number: 3,
-      type: "smcq",
-      question: "Who wrote the play 'Romeo and Juliet'?",
-      correctAnswers: ["William Shakespeare"],
-      availableOptions: [
-        "William Shakespeare",
-        "Charles Dickens",
-        "Jane Austen",
-      ],
-      explanation:
-        "'Romeo and Juliet' is a tragedy written by William Shakespeare in the late 16th century.",
-    },
-    {
-      number: 4,
-      type: "mmcq",
-      question: "Which of the following are programming languages?",
-      correctAnswers: ["Python", "JavaScript", "C++"],
-      availableOptions: ["Python", "HTML", "JavaScript", "CSS", "C++"],
-      explanation:
-        "Python, JavaScript, and C++ are programming languages. HTML and CSS are markup and styling languages.",
-    },
-    {
-      number: 5,
-      type: "smcq",
-      question:
-        "The Great Wall of China was primarily built to protect against invasions from which group?",
-      correctAnswers: ["Mongols"],
-      availableOptions: ["Mongols", "Japanese", "Russians"],
-      explanation:
-        "The Great Wall was constructed to defend against invasions from northern nomadic tribes, particularly the Mongols.",
-    },
-    {
-      number: 6,
-      type: "mmcq",
-      question: "Which of these are primary colors of light?",
-      correctAnswers: ["Red", "Green", "Blue"],
-      availableOptions: ["Red", "Green", "Blue", "Yellow", "Purple"],
-      explanation:
-        "The primary colors of light are red, green, and blue. Yellow and purple are secondary colors.",
-    },
-    {
-      number: 7,
-      type: "smcq",
-      question: "In which year did the Titanic sink?",
-      correctAnswers: ["1912"],
-      availableOptions: ["1905", "1912", "1920"],
-      explanation:
-        "The RMS Titanic sank on April 15, 1912, after hitting an iceberg.",
-    },
-    {
-      number: 8,
-      type: "mmcq",
-      question: "Which of these are considered wonders of the ancient world?",
-      correctAnswers: ["Great Pyramid of Giza", "Hanging Gardens of Babylon"],
-      availableOptions: [
-        "Great Pyramid of Giza",
-        "Eiffel Tower",
-        "Hanging Gardens of Babylon",
-        "Colosseum",
-      ],
-      explanation:
-        "The Great Pyramid of Giza and Hanging Gardens of Babylon are part of the original Seven Wonders of the Ancient World.",
-    },
-    {
-      number: 9,
-      type: "smcq",
-      question: "Which is the largest ocean on Earth?",
-      correctAnswers: ["Pacific Ocean"],
-      availableOptions: ["Atlantic Ocean", "Pacific Ocean", "Indian Ocean"],
-      explanation:
-        "The Pacific Ocean is the largest and deepest ocean, covering more than 63 million square miles.",
-    },
-    {
-      number: 10,
-      type: "mmcq",
-      question: "Which of the following animals are mammals?",
-      correctAnswers: ["Elephant", "Dolphin", "Bat"],
-      availableOptions: ["Elephant", "Crocodile", "Dolphin", "Shark", "Bat"],
-      explanation:
-        "Elephants, dolphins, and bats are mammals. Crocodiles and sharks are reptiles and fish respectively.",
-    },
-  ];
 
   // Check mobile
   useEffect(() => {
@@ -205,25 +62,41 @@ const QuizPage = () => {
     return () => clearInterval(interval);
   }, [timerRunning, showResult, showKeepUp]);
 
-  // const currentQuestion = questions[currentQuestionIndex];
-
-  // const availableOptions = currentQuestion.availableOptions;
-  const isLastQuestion = currentQuestionIndex === questions.length - 1;
+  const formatTime = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return {
+      mins: mins.toString().padStart(2, "0"),
+      secs: secs.toString().padStart(2, "0"),
+    };
+  };
 
   const formattedTime = formatTime(timeElapsed);
 
-  const handleOptionsChange = (option) => {
-    setSelectedOptions((prev) => ({
-      ...prev,
-      [option]: !prev[option],
-    }));
+  const readAloud = async (text) => {
+    if (!text) return;
+    setIsSpeaking(true);
+    try {
+      const audio = await window.puter.ai.txt2speech(text, "en-US");
+      audio.onended = () => setIsSpeaking(false);
+      audio.play();
+    } catch (err) {
+      console.error("TTS error:", err);
+      setIsSpeaking(false);
+    }
   };
 
-  const handleOptionChange = (option) => {
-    setSelectedOption(option);
+  const handleAnswerChange = (e, index) => {
+    const value = e.target.value;
+    const prevSequenceAnswers = userAnswers[currentQuestion._id] || [];
+    const newSequenceAnswers = [...prevSequenceAnswers];
+    newSequenceAnswers[index] = value;
+    setUserAnswers({
+      ...userAnswers,
+      [currentQuestion._id]: newSequenceAnswers,
+    });
   };
 
-  // Handle multi-select toggle
   const handleMultipleSelect = (option) => {
     setSelectedAnswers((prev) =>
       prev.includes(option)
@@ -232,42 +105,72 @@ const QuizPage = () => {
     );
   };
 
-  const handleNextQuestion = () => {
-    setShowResult(false);
-    setShowKeepUp(false);
-    if (currentQuestionIndex < questions.length - 1) {
-      setCurrentQuestionIndex((prev) => prev + 1);
-      setQuestionsAnswered((prev) => prev + 1);
-      resetOptions();
-    }
-  };
-
-  // Generate next question
   const generateNewQuestion = () => {
     const question = questionsGenerator[decodedKey]();
     setCurrentQuestion(question);
     setUserAnswer("");
     setSelectedAnswers([]);
-    setSelectedNumbers([]);
     setFeedback("");
     setShowResult(false);
-    setUserAnswers([]);
+    setQuestionsAnswered((prev) => prev + 1);
     setShowhint(false);
   };
 
-  // Handle submit logic
+  const resetOptions = () => {
+    setUserAnswer("");
+    setSelectedAnswers([]);
+    setUserAnswers({});
+  };
+
+  const handleNextQuestion = () => {
+    setShowResult(false);
+    setShowKeepUp(false);
+    resetOptions();
+    generateNewQuestion();
+    setQuestionsAnswered((prev) => prev + 1);
+  };
+
+  const handleKeepUpContinue = () => {
+    setShowKeepUp(false);
+    setShowResult(false);
+    resetOptions();
+    generateNewQuestion();
+    setQuestionsAnswered((prev) => prev + 1);
+  };
+
+  console.log("Current Question:", currentQuestion);
+
   const handleSubmit = () => {
     if (!currentQuestion) return;
 
-    const { type, answer, questionType } = currentQuestion;
-    const correctAnswers = Array.isArray(answer) ? answer : [answer];
+    const { type, answer } = currentQuestion;
+    const correctAnswers = Array.isArray(answer)
+      ? answer
+      : [answer?.toString()];
+    console.log("Correct Answers:", correctAnswers);
 
     // Validation
-    const isEmpty =
-      (type === "input" && !userAnswer) ||
-      (type === "mcq" && !userAnswer) ||
-      (type === "mcq-multiple" && selectedAnswers.length === 0) ||
-      (type === "number-line" && selectedNumbers.length === 0);
+    let isEmpty = false;
+
+    switch (type) {
+      case "input":
+      case "mcq":
+      case "true_false":
+        isEmpty = !userAnswer;
+        break;
+      case "mcq-multiple":
+        isEmpty = selectedAnswers.length === 0;
+        break;
+      case "sequence":
+        const seqAnswers = userAnswers[currentQuestion._id] || [];
+        isEmpty = seqAnswers.length === 0 || seqAnswers.some((a) => !a);
+        break;
+      case "sorting":
+        isEmpty = false; // Sorting always has items, no empty state
+        break;
+      default:
+        isEmpty = true;
+    }
 
     if (isEmpty) {
       setFeedback("⚠️ Please provide an answer before submitting");
@@ -287,110 +190,154 @@ const QuizPage = () => {
           : `❌ Oops! Correct answers were: ${correctAnswers.join(", ")}`;
         break;
 
-      case "number-line":
-        const missed = correctAnswers.filter(
-          (n) => !selectedNumbers.includes(n)
-        );
-        const extras = selectedNumbers.filter(
-          (n) => !correctAnswers.includes(n)
-        );
-        isCorrect = missed.length === 0 && extras.length === 0;
-
-        feedbackMessage = isCorrect
-          ? `🎉 Perfect! All ${questionType} numbers correct!`
-          : `❌ ${
-              questionType === "even" ? "Even" : "Odd"
-            } Number Practice:\n` +
-            (missed.length > 0
-              ? `Missed ${questionType} numbers: ${missed.join(", ")}\n`
-              : "") +
-            (extras.length > 0
-              ? `Incorrect selections: ${extras.join(", ")}\n`
-              : "") +
-            `Correct ${questionType} numbers: ${correctAnswers.join(
-              ", "
-            )}\n\n` +
-            `Tip: ${
-              questionType === "even"
-                ? "Even numbers end with 0, 2, 4, 6, or 8"
-                : "Odd numbers end with 1, 3, 5, 7, or 9"
-            }`;
-        break;
-
       case "input":
       case "mcq":
-        isCorrect =
-          userAnswer.toString().toLowerCase() ===
-          correctAnswers[0].toString().toLowerCase();
+      case "true_false":
+        isCorrect = correctAnswers.some(
+          (ans) =>
+            ans.toString().toLowerCase() === userAnswer.toString().toLowerCase()
+        );
         feedbackMessage = isCorrect
           ? "🎉 Correct! Great job!"
           : `❌ Not quite! The correct answer was: ${correctAnswers.join(
               ", "
             )}`;
         break;
-      case "sequence":
+
+      case "sequence": {
         const userSequenceAnswers = userAnswers[currentQuestion._id] || [];
 
         isCorrect =
-          currentQuestion?.correctAnswers.length ===
-            userSequenceAnswers.length &&
-          currentQuestion?.correctAnswers.every(
-            (correctAns, i) =>
-              correctAns.toString().trim() ===
-              (userSequenceAnswers[i] ?? "").toString().trim()
-          );
+          correctAnswers.length === userSequenceAnswers.length &&
+          correctAnswers.every((correctAns, i) => {
+            const userVal = userSequenceAnswers[i] ?? "";
+            return correctAns?.toString().trim() === userVal?.toString().trim();
+          });
 
         feedbackMessage = isCorrect
           ? "🎉 Well done! You completed the sequence correctly!"
-          : `❌ Not quite. Correct numbers were: ${correctAnswers.join(", ")}`;
+          : `❌ Not quite. Correct sequence was: ${correctAnswers.join(", ")}`;
+        break;
+      }
+
+      case "sorting": {
+        // Ensure userAnswers is always an array
+        const userSorting = Array.isArray(userAnswers[currentQuestion._id])
+          ? userAnswers[currentQuestion._id]
+          : [];
+
+        // Extract values safely from items
+        const items = Array.isArray(currentQuestion.items)
+          ? currentQuestion.items.map((item) => item.value)
+          : [];
+
+        // Generate the correct sorted order
+        const correctSorted =
+          currentQuestion.orderType === "asc"
+            ? [...items].sort((a, b) => a - b)
+            : [...items].sort((a, b) => b - a);
+
+        let isCorrect = false;
+        let feedbackMessage = "⚠️ Please sort the items first!";
+
+        if (userSorting.length > 0) {
+          // Normalize both to numbers for safe comparison
+          const normalizedUser = userSorting.map((v) => Number(v));
+          const normalizedCorrect = correctSorted.map((v) => Number(v));
+
+          isCorrect =
+            JSON.stringify(normalizedUser) ===
+            JSON.stringify(normalizedCorrect);
+
+          feedbackMessage = isCorrect
+            ? `🎉 Correct! You sorted in ${currentQuestion.orderType.toUpperCase()} order!`
+            : `❌ Not quite. Correct order was: ${normalizedCorrect.join(
+                ", "
+              )}`;
+        }
+
+        console.log("👉 Raw User Sorting:", userSorting);
+        console.log("👉 Correct Sorted:", correctSorted);
+        console.log("👉 Order Type:", currentQuestion.orderType);
+        console.log("👉 Is Correct?", isCorrect);
+        console.log("👉 Feedback:", feedbackMessage);
 
         break;
+      }
 
       default:
         feedbackMessage = "⚠️ Unknown question type";
         break;
     }
 
-    // setFeedback(feedbackMessage);
+    // 🔗 Save result (object, not array!)
+    setUserAnswers((prev) => ({
+      ...prev,
+      [currentQuestion._id]: {
+        givenAnswer:
+          type === "mcq-multiple"
+            ? selectedAnswers
+            : type === "input" || type === "mcq" || type === "true_false"
+            ? userAnswer
+            : prev[currentQuestion._id]?.givenAnswer || [],
+        isCorrect,
+      },
+    }));
+
+    setFeedback(feedbackMessage);
+    setIsCorrect(isCorrect);
     setShowResult(true);
-    // setTotalQuestions((prev) => prev + 1);
+    setTimerRunning(false);
 
     if (isCorrect) {
-      // setScore((prev) => prev + 1);
+      setSmartScore((prev) => Math.min(prev + 10, 100));
       setTimeout(() => {
         generateNewQuestion();
       }, 1000);
+    } else {
+      setSmartScore((prev) => Math.max(prev - 5, 0));
     }
   };
 
-  console.log("selectedOptions:", selectedOptions);
-  console.log("selectedOption:", selectedOption);
-  const resetOptions = () => {
-    const initial = {};
-    setSelectedOptions(initial);
-    setSelectedOption(initial);
+  // inside QuizPage
+  const handleAnswer = (isCorrect) => {
+    // update score
+    if (isCorrect) {
+      // setScore((prev) => prev + 1);
+    }
+
+    // store answer for review (optional)
+    setUserAnswers((prev) => [
+      ...prev,
+      {
+        questionId: currentQuestion.id,
+        isCorrect,
+      },
+    ]);
+
+    // ✅ give feedback (e.g. explanation or highlight)
+    // setShowExplanation(true);
+
+    // if you want to auto-move on sorting / MCQ:
+    // setTimeout(() => {
+    //   goToNextQuestion();
+    // }, 1500);
   };
 
-  const handleKeepUpContinue = () => {
-    setShowKeepUp(false);
+  const resetQuiz = () => {
+    setCurrentQuestionIndex(0);
+    setQuestionsAnswered(0);
+    setSmartScore(0);
+    setTimeElapsed(0);
+    setTimerRunning(true);
     setShowResult(false);
-    if (currentQuestionIndex < questions.length - 1) {
-      setCurrentQuestionIndex((prev) => prev + 1);
-      setQuestionsAnswered((prev) => prev + 1);
-      resetOptions();
-    }
+    setShowKeepUp(false);
+    resetOptions();
+    generateNewQuestion();
   };
 
-  const readAloud = async (text) => {
-    setIsSpeaking(true);
-    try {
-      const audio = await window.puter.ai.txt2speech(text, "en-US");
-      audio.onended = () => setIsSpeaking(false);
-      audio.play();
-    } catch (err) {
-      alert("TTS error");
-      setIsSpeaking(false);
-    }
+  const handleAnswerSubmit = (answer) => {
+    alert(`You submitted: ${answer}`);
   };
 
   const renderQuestionInput = () => {
@@ -399,18 +346,46 @@ const QuizPage = () => {
     switch (currentQuestion.type) {
       case "input":
         return (
+          <BlankInputComponent
+            exampleText="Learn with an example"
+            questionText={currentQuestion.question}
+            images={currentQuestion.images}
+            onSubmit={handleSubmit}
+            answer={userAnswer}
+            onChangeAnswer={(e) => setUserAnswer(e.target.value)}
+            promptText={currentQuestion.prompt || "Enter your answer:"}
+          />
+        );
+
+      case "sorting":
+        return (
+          <SortingQuestion
+            question={currentQuestion.question}
+            items={currentQuestion.items}
+            orderType={currentQuestion.orderType}
+            onAnswer={handleAnswer} // same callback as MCQ, T/F, etc.
+          />
+        );
+
+      case "input1":
+        return (
           <input
-            type={currentQuestion?.textType === "text" ? "text" : "number"}
+            type="number"
             value={userAnswer}
             onChange={(e) => setUserAnswer(e.target.value)}
             disabled={showResult}
             className="
-        border border-[#03a9f4] 
-        w-16 h-10 
-        text-center text-lg font-normal 
-        focus:outline-none focus:ring-2 focus:ring-[#03a9f4]
-      "
+    border border-[#03a9f4] 
+    w-16 h-10
+    sm:w-20 sm:h-12 
+    text-center text-lg 
+    font-normal 
+    focus:outline-none focus:ring-2 focus:ring-[#03a9f4]
+    transition-all
+  "
             autoComplete="off"
+            autoFocus // Corrected to camelCase
+            // ref={(input) => input && input.focus()} // More reliable focus handling
           />
         );
 
@@ -439,6 +414,7 @@ const QuizPage = () => {
                     onChange={(e) => handleAnswerChange(e, nullIndex)}
                     className="w-16 mx-1 p-1 border border-gray-300 rounded text-center focus:outline-none focus:ring-2 focus:ring-green-500"
                     placeholder=""
+                    disabled={showResult}
                   />
                 );
               }
@@ -453,42 +429,40 @@ const QuizPage = () => {
         );
 
       case "mcq":
+      case "true_false":
         return (
-          <div className="flex flex-col gap-4 items-center w-full">
-            <div className="flex flex-wrap gap-6 justify-center">
+          <div className="flex flex-col gap-4 items-left w-full">
+            <div className="flex flex-wrap gap-3 justify-left mt-6">
               {currentQuestion.options.map((option) => {
                 const isSelected = userAnswer === option;
-                const isCorrect =
-                  showResult && option === currentQuestion.answer;
+                const isCorrect = showResult && correctAnswers.includes(option);
                 const isWrong =
-                  showResult && isSelected && option !== currentQuestion.answer;
+                  showResult && isSelected && !correctAnswers.includes(option);
 
                 return (
                   <button
                     key={option}
                     onClick={() => setUserAnswer(option)}
                     disabled={showResult}
-                    className={`text-center p-3 rounded-xl cursor-pointer text-lg font-medium border-2 transition-all min-w-[100px]
-                ${isCorrect ? "bg-green-200 border-green-500" : ""}
-                ${isWrong ? "bg-red-200 border-red-500" : ""}
-                ${
-                  isSelected && !showResult
-                    ? "bg-purple-200 border-purple-400 scale-105"
-                    : ""
-                }
-                ${
-                  !isSelected && !showResult
-                    ? "bg-white border-gray-300 hover:border-purple-300"
-                    : ""
-                }
-                ${showResult ? "opacity-100" : ""}
-              `}
+                    className={`flex items-center rounded border w-full md:w-auto px-5 h-12 cursor-pointer select-none transition-all duration-200 text-sm font-medium
+            ${isCorrect ? "border-green-500 bg-green-200" : ""}
+            ${isWrong ? "border-red-500 bg-red-200" : ""}
+            ${
+              isSelected && !showResult
+                ? "border-sky-900 bg-sky-200"
+                : !isSelected && !showResult
+                ? "border-sky-300 hover:border-purple-300"
+                : ""
+            }
+          `}
                   >
-                    {currentQuestion?.latex === true ? (
-                      <InlineMath math={option} />
-                    ) : (
-                      option
-                    )}
+                    <span className="text-gray-900 whitespace-nowrap">
+                      {currentQuestion?.latex === true ? (
+                        <InlineMath math={option} />
+                      ) : (
+                        option
+                      )}
+                    </span>
                   </button>
                 );
               })}
@@ -501,18 +475,22 @@ const QuizPage = () => {
               </div>
             )}
 
-            {showResult && userAnswer && (
+            {showResult && userAnswer && currentQuestion.explanation && (
               <div className="mt-4 text-md text-gray-800 bg-white/80 border-l-4 border-purple-400 p-3 rounded-md max-w-lg">
                 <strong>Explanation:</strong>
-                {currentQuestion?.explanation?.map((exp, i) => (
-                  <ReactMarkdown
-                    key={i}
-                    remarkPlugins={[remarkMath]}
-                    rehypePlugins={[rehypeKatex]}
-                  >
-                    {exp}
-                  </ReactMarkdown>
-                ))}
+                {Array.isArray(currentQuestion.explanation) ? (
+                  currentQuestion.explanation.map((exp, i) => (
+                    <ReactMarkdown
+                      key={i}
+                      remarkPlugins={[remarkMath]}
+                      rehypePlugins={[rehypeKatex]}
+                    >
+                      {exp}
+                    </ReactMarkdown>
+                  ))
+                ) : (
+                  <p>{currentQuestion.explanation}</p>
+                )}
               </div>
             )}
           </div>
@@ -521,7 +499,8 @@ const QuizPage = () => {
       case "mcq-multiple":
         return (
           <div className="flex flex-col gap-4 items-center w-full">
-            <div className="flex flex-wrap gap-6 justify-center">
+            {/* Options */}
+            <div className="flex flex-col md:flex-row md:flex-wrap gap-3 w-full justify-left">
               {currentQuestion?.options.map((option) => {
                 const isSelected = selectedAnswers.includes(option);
                 const isCorrect =
@@ -532,36 +511,63 @@ const QuizPage = () => {
                   !currentQuestion.answer.includes(option);
 
                 return (
-                  <button
+                  <motion.label
                     key={option}
+                    role="checkbox"
+                    aria-checked={isSelected}
+                    whileHover={{ scale: 1.02 }}
+                    className={`flex items-center rounded border w-full md:w-auto pr-5 h-12 cursor-pointer select-none transition-all duration-200 ${
+                      isCorrect
+                        ? "border-green-600 bg-green-200"
+                        : isWrong
+                        ? "border-red-600 bg-red-200"
+                        : isSelected
+                        ? "border-purple-600 bg-purple-200"
+                        : "border-sky-300 bg-white"
+                    }`}
                     onClick={() => handleMultipleSelect(option)}
-                    disabled={showResult}
-                    className={`text-center p-3 rounded-xl cursor-pointer text-lg font-medium border-2 transition-all min-w-[100px]
-              ${isCorrect ? "bg-green-200 border-green-500" : ""}
-              ${isWrong ? "bg-red-200 border-red-500" : ""}
-              ${
-                isSelected && !showResult
-                  ? "bg-purple-200 border-purple-400 scale-105"
-                  : ""
-              }
-              ${
-                !isSelected && !showResult
-                  ? "bg-white border-gray-300 hover:border-purple-300"
-                  : ""
-              }
-              ${showResult ? "opacity-100" : ""}
-            `}
                   >
-                    {currentQuestion?.latex ? (
-                      <InlineMath math={option} />
-                    ) : (
-                      option
-                    )}
-                  </button>
+                    <div
+                      className={`w-8 h-12 flex justify-center items-center rounded-l ${
+                        isCorrect
+                          ? "bg-green-500"
+                          : isWrong
+                          ? "bg-red-500"
+                          : isSelected
+                          ? "bg-purple-500"
+                          : "bg-sky-300"
+                      }`}
+                    >
+                      {isSelected && (
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-4 w-4 text-white"
+                          fill="none"
+                          viewBox="0 0 20 20"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M5 13l4 4L19 7"
+                          />
+                        </svg>
+                      )}
+                    </div>
+                    <span className="text-gray-900 text-sm pl-4 whitespace-nowrap">
+                      {currentQuestion?.latex ? (
+                        <InlineMath math={option} />
+                      ) : (
+                        option
+                      )}
+                    </span>
+                  </motion.label>
                 );
               })}
             </div>
 
+            {/* Feedback */}
             {showResult &&
               selectedAnswers.length > 0 &&
               currentQuestion.feedbackPerOption && (
@@ -577,72 +583,26 @@ const QuizPage = () => {
                 </div>
               )}
 
+            {/* Explanation */}
             {showResult && currentQuestion.explanation && (
               <div className="mt-4 text-md text-gray-800 bg-white/80 border-l-4 border-purple-400 p-3 rounded-md max-w-lg">
                 <strong>Explanation:</strong>
-                <ul className="mt-2 list-disc list-inside space-y-1">
-                  {currentQuestion.explanation.map((explain, index) => (
-                    <li key={index}>
-                      <span>
+                {Array.isArray(currentQuestion.explanation) ? (
+                  <ul className="mt-2 list-disc list-inside space-y-1">
+                    {currentQuestion.explanation.map((explain, index) => (
+                      <li key={index}>
                         <InlineMath math={explain} />
-                      </span>
-                    </li>
-                  ))}
-                </ul>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p>{currentQuestion.explanation}</p>
+                )}
               </div>
             )}
           </div>
         );
 
-      case "true_false":
-        return (
-          <div className="flex flex-col gap-4 items-center w-full">
-            <div className="flex gap-6 justify-center">
-              {currentQuestion.options.map((option) => {
-                const isSelected = userAnswer === option;
-                const isCorrect =
-                  showResult && option === currentQuestion.answer;
-                const isWrong =
-                  showResult && isSelected && option !== currentQuestion.answer;
-
-                return (
-                  <button
-                    key={option}
-                    onClick={() => setUserAnswer(option)}
-                    disabled={showResult}
-                    className={`text-center p-3 rounded-xl cursor-pointer text-lg font-medium border-2 transition-all min-w-[100px]
-                ${isCorrect ? "bg-green-200 border-green-500" : ""}
-                ${isWrong ? "bg-red-200 border-red-500" : ""}
-                ${
-                  isSelected && !showResult
-                    ? "bg-purple-200 border-purple-400 scale-105"
-                    : ""
-                }
-                ${
-                  !isSelected && !showResult
-                    ? "bg-white border-gray-300 hover:border-purple-300"
-                    : ""
-                }
-                ${showResult ? "opacity-100" : ""}
-              `}
-                  >
-                    {option}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        );
-
-      // case "number-line":
-      //   return (
-      //     <NumberLineQuestion
-      //       question={currentQuestion}
-      //       onAnswer={(selected) => setUserAnswer(selected)}
-      //       showResult={showResult}
-      //       key={totalQuestions}
-      //     />
-      //   );
       default:
         return null;
     }
@@ -652,62 +612,99 @@ const QuizPage = () => {
     if (!currentQuestion?.visuals || currentQuestion.visuals.length === 0) {
       return null;
     }
+
+    // Even Number Hunt
     if (decodedKey === "🔢 Even Number Hunt") {
       return (
-        <div className="flex flex-wrap justify-center gap-4 p-4 bg-blue-50 rounded-lg">
-          {currentQuestion.visuals.map((visual, i) => (
-            <div
-              key={i}
-              className={`text-4xl p-3  rounded-lg ${
-                currentQuestion.answer.includes(visual.content) && showResult
-                  ? "bg-green-100 border-2 border-green-400"
-                  : "bg-white border-2 border-gray-200"
-              }`}
-            >
-              {visual.content}
-            </div>
-          ))}
-        </div>
-      );
-    }
-    // Special styling for Skip-Counting Adventure
-    if (decodedKey === "Skip-Counting-pictures") {
-      return (
-        <div className="flex flex-wrap justify-left gap-4 text-3xl p-4 bg-purple-50 rounded-lg">
-          {currentQuestion.visuals.map((group, i) => (
-            <div
-              key={i}
-              className="p-2 border-2 border-dashed border-purple-200 rounded-md"
-            >
-              {group}
-            </div>
-          ))}
+        <div className="flex justify-center">
+          <motion.div
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ type: "spring", stiffness: 300, damping: 20 }}
+            className="inline-flex flex-wrap justify-left gap-4 p-2 bg-blue-50 rounded-lg"
+          >
+            {currentQuestion.visuals.map((visual, i) => (
+              <motion.div
+                key={i}
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: i * 0.05, type: "spring", stiffness: 300 }}
+                className={`text-4xl p-3 rounded-lg ${
+                  currentQuestion.answer.includes(visual.content) && showResult
+                    ? "bg-green-100 border-2 border-green-400"
+                    : "bg-white border-2 border-gray-200"
+                }`}
+              >
+                {visual.content}
+              </motion.div>
+            ))}
+          </motion.div>
         </div>
       );
     }
 
-    // Default visual styling for others like "Even or Odd"
-    return (
-      <div className="overflow-x-auto whitespace-nowrap bg-yellow-50 rounded-lg p-4">
-        <div className="inline-flex gap-3 text-4xl">
-          {currentQuestion.visuals.map((emoji, i) => (
-            <span key={i}>{emoji}</span>
-          ))}
+    // Skip-Counting Adventure
+    if (decodedKey === "Skip-Counting-pictures") {
+      return (
+        <div className="flex justify-left">
+          <motion.div
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ type: "spring", stiffness: 300, damping: 20 }}
+            className="inline-flex flex-wrap gap-3 sm:gap-5 p-3 sm:p-5 rounded-lg bg-purple-50"
+          >
+            {currentQuestion.visuals.map((group, i) => (
+              <motion.div
+                key={i}
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{
+                  delay: i * 0.05,
+                  type: "spring",
+                  stiffness: 300,
+                }}
+              >
+                {group}
+              </motion.div>
+            ))}
+          </motion.div>
         </div>
+      );
+    }
+
+    // Default (e.g., Even or Odd)
+    return (
+      <div className="flex justify-left">
+        <motion.div
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ type: "decay", stiffness: 300, damping: 20 }}
+          className="inline-flex flex-wrap gap-2 sm:gap-4 p-2 sm:p-2 rounded-lg"
+        >
+          <div className="flex flex-wrap gap-3 text-4xl">
+            {currentQuestion.visuals.map((emoji, i) => (
+              <motion.span
+                key={i}
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: i * 0.05, type: "spring", stiffness: 300 }}
+              >
+                {emoji}
+              </motion.span>
+            ))}
+          </div>
+        </motion.div>
       </div>
     );
   };
 
-  const resetQuiz = () => {
-    setCurrentQuestionIndex(0);
-    setQuestionsAnswered(0);
-    setSmartScore(0);
-    setTimeElapsed(0);
-    setTimerRunning(true);
-    setShowResult(false);
-    setShowKeepUp(false);
-    resetOptions();
-  };
+  if (!currentQuestion) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="text-xl">Loading questions...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-gradient-to-b from-sky-300 to-emerald-200 min-h-screen flex flex-col">
@@ -739,7 +736,7 @@ const QuizPage = () => {
                 <div className="flex-1">
                   <div>Time</div>
                   <div className="text-sky-400 font-semibold text-lg leading-none">
-                    PAUSED
+                    {formattedTime.mins}:{formattedTime.secs}
                   </div>
                 </div>
                 <div className="flex-1">
@@ -754,6 +751,68 @@ const QuizPage = () => {
 
           {/* Left content */}
           <div className="flex-1 pr-0 md:pr-12">
+            <div>
+              <button
+                onClick={() => setShowExample((prev) => !prev)}
+                className="text-[#03a9f4] font-semibold text-sm justify-center leading-6 hover:underline"
+              >
+                Learn with an example
+              </button>
+
+              <AnimatePresence>
+                {showExample && currentQuestion?.example && (
+                  <motion.div
+                    key="example"
+                    initial={{ height: 0, opacity: 0, x: -20 }}
+                    animate={{ height: "auto", opacity: 1, x: 0 }}
+                    exit={{ height: 0, opacity: 0, x: -20 }}
+                    transition={{ duration: 0.4, ease: "easeInOut" }}
+                    className="overflow-hidden mt-3"
+                  >
+                    <div className="flex items-start gap-2">
+                      {/* Read aloud button */}
+
+                      <button
+                        onClick={() =>
+                          readAloud((currentQuestion?.example || []).join(" "))
+                        }
+                        disabled={isSpeaking}
+                        className="text-xl text-purple-600 hover:text-purple-800 transition-colors flex-shrink-0 mt-1"
+                        aria-label="Read aloud"
+                      >
+                        {isSpeaking ? <FiVolume /> : <FiVolume2 />}
+                      </button>
+
+                      <div className="p-3 bg-blue-50 rounded-lg border border-blue-200 flex-1">
+                        <h4 className="text-blue-700 font-semibold mb-2">
+                          Example
+                        </h4>
+                        <ul className="list-disc list-inside space-y-1 text-gray-800 text-sm">
+                          {currentQuestion.example.map((step, i) => (
+                            <li key={i}>
+                              <ReactMarkdown>{step}</ReactMarkdown>
+                            </li>
+                          ))}
+                        </ul>
+
+                        {/* {currentQuestion.explanation && (
+                          <>
+                            <h4 className="text-blue-700 font-semibold mt-4 mb-2">
+                              Step-by-step explanation
+                            </h4>
+                            <ul className="list-disc list-inside space-y-1 text-gray-800 text-sm">
+                              {currentQuestion.explanation.map((step, i) => (
+                                <li key={i}>{step}</li>
+                              ))}
+                            </ul>
+                          </>
+                        )} */}
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
             {/* Keep Up Feedback */}
             {showKeepUp && (
               <motion.div
@@ -800,17 +859,20 @@ const QuizPage = () => {
             {/* Question & Dynamic Options */}
             {!showResult && !showKeepUp && (
               <>
-                <p className="text-xl text-center whitespace-pre-wrap text-gray-800 min-h-[4rem] flex items-center justify-left">
+                <div className="flex items-start gap-3 text-gray-800 min-h-[4rem]">
+                  {/* Read aloud button */}
                   <button
                     onClick={() => readAloud(currentQuestion?.question)}
                     disabled={isSpeaking}
-                    className="mr-2 text-xl text-purple-600 hover:text-purple-800 transition-colors"
+                    className="text-xl text-purple-600 hover:text-purple-800 transition-colors flex-shrink-0 mt-1"
                     aria-label="Read aloud"
                   >
                     {isSpeaking ? <FiVolume /> : <FiVolume2 />}
                   </button>
 
-                  <div>
+                  {/* Question content */}
+                  <div className="flex-1">
+                    {/* Passage */}
                     {currentQuestion?.passage && (
                       <div className="mb-4">
                         <h3 className="text-gray-700 font-semibold mb-2">
@@ -823,6 +885,8 @@ const QuizPage = () => {
                         </div>
                       </div>
                     )}
+
+                    {/* Main question */}
                     {currentQuestion?.latex ? (
                       <div className="text-xl text-gray-800 whitespace-pre-wrap break-words leading-relaxed">
                         <ReactMarkdown
@@ -847,66 +911,89 @@ const QuizPage = () => {
                       </ReactMarkdown>
                     )}
 
-                    <div className="overflow-auto max-w-full px-2">
-                      <div
-                        className="w-full max-w-full"
-                        dangerouslySetInnerHTML={{
-                          __html: currentQuestion?.svg,
-                        }}
-                      />
-                    </div>
+                    {/* SVG */}
+                    {currentQuestion?.svg && (
+                      <div className="overflow-auto max-w-full px-2">
+                        <div
+                          className="w-full max-w-full"
+                          dangerouslySetInnerHTML={{
+                            __html: currentQuestion.svg,
+                          }}
+                        />
+                      </div>
+                    )}
 
-                    <ReactMarkdown
-                      remarkPlugins={[remarkGfm]}
-                      components={{
-                        table: ({ node, ...props }) => (
-                          <table className="w-auto border border-gray-400 border-collapse mx-auto my-4 text-sm">
-                            {props.children}
-                          </table>
-                        ),
-                        thead: ({ node, ...props }) => (
-                          <thead className="bg-gray-100 text-center text-[14px]">
-                            {props.children}
-                          </thead>
-                        ),
-                        tr: ({ node, ...props }) => (
-                          <tr className="border-b border-gray-300 text-center">
-                            {props.children}
-                          </tr>
-                        ),
-                        th: ({ node, ...props }) => (
-                          <th className="border border-gray-400 px-2 py-1 font-semibold min-w-[100px]">
-                            {props.children}
-                          </th>
-                        ),
-                        td: ({ node, ...props }) => (
-                          <td className="border border-gray-300 px-2 py-1">
-                            {props.children}
-                          </td>
-                        ),
-                      }}
+                    {/* Table */}
+                    {currentQuestion?.table && (
+                      <ReactMarkdown
+                        remarkPlugins={[remarkGfm]}
+                        components={{
+                          table: ({ node, ...props }) => (
+                            <table className="w-auto border border-gray-400 border-collapse mx-auto my-4 text-sm">
+                              {props.children}
+                            </table>
+                          ),
+                          thead: ({ node, ...props }) => (
+                            <thead className="bg-gray-100 text-center text-[14px]">
+                              {props.children}
+                            </thead>
+                          ),
+                          tr: ({ node, ...props }) => (
+                            <tr className="border-b border-gray-300 text-center">
+                              {props.children}
+                            </tr>
+                          ),
+                          th: ({ node, ...props }) => (
+                            <th className="border border-gray-400 px-2 py-1 font-semibold min-w-[100px]">
+                              {props.children}
+                            </th>
+                          ),
+                          td: ({ node, ...props }) => (
+                            <td className="border border-gray-300 px-2 py-1">
+                              {props.children}
+                            </td>
+                          ),
+                        }}
+                      >
+                        {currentQuestion.table}
+                      </ReactMarkdown>
+                    )}
+                  </div>
+                </div>
+
+                {renderVisuals()}
+                {currentQuestion?.prompt && (
+                  <div className="flex items-center gap-3 text-gray-800 min-h-[4rem]">
+                    <button
+                      onClick={() => readAloud(currentQuestion?.prompt)}
+                      disabled={isSpeaking}
+                      className="text-xl text-purple-600 hover:text-purple-800 transition-colors flex-shrink-0 mt-1"
+                      aria-label="Read aloud"
                     >
-                      {currentQuestion?.table}
+                      {isSpeaking ? <FiVolume /> : <FiVolume2 />}
+                    </button>
+                    <ReactMarkdown
+                      remarkPlugins={[remarkGfm, remarkMath]}
+                      rehypePlugins={[rehypeKatex]}
+                    >
+                      {currentQuestion?.prompt || ""}
                     </ReactMarkdown>
                   </div>
-                </p>
-                {renderVisuals()}
+                )}
 
-                <div className="flex justify-left">{renderQuestionInput()}</div>
+                <div className="flex justify-left mt-5">
+                  {renderQuestionInput()}
+                </div>
+
+                {feedback && (
+                  <div className="mt-2 text-red-500 text-sm">{feedback}</div>
+                )}
 
                 <motion.button
-                  hileHover={{ scale: 1.05 }}
-                  className="
-    mt-6 bg-lime-700 text-white text-sm font-semibold 
-    px-6 py-2 rounded 
-    disabled:opacity-50 disabled:cursor-not-allowed
-    w-full sm:w-auto
-  "
+                  whileHover={{ scale: 1.05 }}
+                  className="mt-6 bg-lime-700 text-white text-sm font-semibold px-6 py-2 rounded disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto"
                   onClick={handleSubmit}
-                  // disabled={Object.keys(selectedOptions).every(
-                  //   (key) =>
-                  //     !selectedOptions[key] || !selectedOption[key] || !availableOptions.includes(key)
-                  // )}
+                  disabled={showResult}
                 >
                   Submit
                 </motion.button>
@@ -962,84 +1049,43 @@ const QuizPage = () => {
                     }`}
                   >
                     {isCorrect
-                      ? "Great job! You selected the correct classification."
-                      : "The correct answer has been highlighted."}
+                      ? "Great job! You got the correct answer."
+                      : feedback}
                   </p>
                 </div>
 
-                <div className="bg-gray-50 p-4 rounded-lg mb-6">
-                  <h4 className="font-semibold text-gray-900 mb-2">
-                    Explanation:
-                  </h4>
-                  <p className="text-gray-700 text-sm">
-                    {currentQuestion.explanation}
-                  </p>
-                </div>
+                {currentQuestion.explanation && (
+                  <div className="bg-gray-50 p-4 rounded-lg mb-6">
+                    <h4 className="font-semibold text-gray-900 mb-2">
+                      Explanation:
+                    </h4>
+                    {Array.isArray(currentQuestion.explanation) ? (
+                      currentQuestion.explanation.map((exp, i) => (
+                        <ReactMarkdown
+                          key={i}
+                          remarkPlugins={[remarkMath]}
+                          rehypePlugins={[rehypeKatex]}
+                        >
+                          {exp}
+                        </ReactMarkdown>
+                      ))
+                    ) : (
+                      <p className="text-gray-700 text-sm">
+                        {currentQuestion.explanation}
+                      </p>
+                    )}
+                  </div>
+                )}
 
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   transition={{ duration: 0.2 }}
                   className="bg-sky-600 text-white text-sm font-semibold px-6 py-2 rounded"
                   onClick={
-                    isCorrect
-                      ? () => {
-                          setShowResult(false);
-                          setShowKeepUp(true);
-                        }
-                      : handleNextQuestion
+                    isCorrect ? handleKeepUpContinue : handleNextQuestion
                   }
                 >
-                  {isCorrect
-                    ? "Keep it up!"
-                    : isLastQuestion
-                    ? "Finish"
-                    : "Next question"}
-                </motion.button>
-              </motion.div>
-            )}
-
-            {/* Quiz Completed */}
-            {isLastQuestion && showKeepUp && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="text-center"
-              >
-                <div className="bg-blue-50 p-6 rounded-lg mb-4">
-                  <h3 className="font-bold text-gray-900 text-lg mb-1">
-                    Quiz Completed!
-                  </h3>
-                  <p className="text-gray-700 mb-2">
-                    You've completed all {questions.length} questions.
-                  </p>
-                  <div className="flex justify-center space-x-4 text-sm">
-                    <div>
-                      <div className="font-bold text-blue-600">
-                        {questionsAnswered}
-                      </div>
-                      <div className="text-gray-600">Questions</div>
-                    </div>
-                    <div>
-                      <div className="font-bold text-blue-600">
-                        {smartScore}
-                      </div>
-                      <div className="text-gray-600">Smart Score</div>
-                    </div>
-                    <div>
-                      <div className="font-bold text-blue-600">
-                        {formattedTime.mins}:{formattedTime.secs}
-                      </div>
-                      <div className="text-gray-600">Time</div>
-                    </div>
-                  </div>
-                </div>
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  transition={{ duration: 0.2 }}
-                  className="bg-indigo-600 text-white text-sm font-semibold px-6 py-2 rounded"
-                  onClick={resetQuiz}
-                >
-                  Restart Quiz
+                  {isCorrect ? "Continue" : "Next question"}
                 </motion.button>
               </motion.div>
             )}
@@ -1062,19 +1108,13 @@ const QuizPage = () => {
               <div className="bg-gray-100 py-2 text-xs text-gray-500 font-normal">
                 <div className="flex justify-center space-x-1">
                   <div className="flex flex-col items-center">
-                    <span>00</span>
-                    <span className="text-[8px] font-light text-gray-400">
-                      HR
-                    </span>
-                  </div>
-                  <div className="flex flex-col items-center">
-                    <span>00</span>
+                    <span>{formattedTime.mins}</span>
                     <span className="text-[8px] font-light text-gray-400">
                       MIN
                     </span>
                   </div>
                   <div className="flex flex-col items-center">
-                    <span>00</span>
+                    <span>{formattedTime.secs}</span>
                     <span className="text-[8px] font-light text-gray-400">
                       SEC
                     </span>

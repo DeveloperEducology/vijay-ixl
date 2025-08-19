@@ -8,6 +8,10 @@ export const class2LessonData = [
         name: "Skip-Counting-pictures",
       },
       {
+        id: "Skip-image-count",
+        name: "Skip-image-count",
+      },
+      {
         id: "missing number in sequence",
         name: "missing number in sequence",
       },
@@ -62,7 +66,7 @@ export const class2LessonData = [
         name: "Comparing numbers up to 100",
       },
       {
-        id: "comparing-and-ordering-2",
+        id: "Sorting",
         name: "Put numbers up to 100 in order",
       },
       {

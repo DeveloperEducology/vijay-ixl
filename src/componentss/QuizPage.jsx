@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, acceleratedValues } from "framer-motion";
 import { useParams } from "react-router-dom";
 import { questionsGenerator } from "../utils/KidQnGntr";
 import ReactMarkdown from "react-markdown";
@@ -9,6 +9,9 @@ import { InlineMath } from "react-katex";
 import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
 import { FiVolume, FiVolume2 } from "react-icons/fi";
+import SortingQuestion from "../pages/SortingQuestion";
+import BlankInputComponent from "../pages/BlankInputComponent";
+import EmojiRenderComponent from "./EmojiRenderComponent";
 
 const QuizPage = () => {
   const { topicId } = useParams();
@@ -18,7 +21,7 @@ const QuizPage = () => {
   const [smartScore, setSmartScore] = useState(0);
   const [correctAnswers, setCorrectAnswers] = useState([]);
   const [showExample, setShowExample] = useState(false);
-
+  const [answer, setAnswer] = useState(null);
   const [timeElapsed, setTimeElapsed] = useState(0);
   const [timerRunning, setTimerRunning] = useState(true);
   const [showResult, setShowResult] = useState(false);
@@ -152,6 +155,7 @@ const QuizPage = () => {
 
     switch (type) {
       case "input":
+      case "input1":
       case "mcq":
       case "true_false":
         isEmpty = !userAnswer;
@@ -162,6 +166,9 @@ const QuizPage = () => {
       case "sequence":
         const seqAnswers = userAnswers[currentQuestion._id] || [];
         isEmpty = seqAnswers.length === 0 || seqAnswers.some((a) => !a);
+        break;
+      case "sorting":
+        isEmpty = false; // Sorting always has items, no empty state
         break;
       default:
         isEmpty = true;
@@ -186,6 +193,7 @@ const QuizPage = () => {
         break;
 
       case "input":
+      case "input1":
       case "mcq":
       case "true_false":
         isCorrect = correctAnswers.some(
@@ -202,11 +210,10 @@ const QuizPage = () => {
       case "sequence": {
         const userSequenceAnswers = userAnswers[currentQuestion._id] || [];
 
-        // Check if all correct answers match user answers in order
         isCorrect =
           correctAnswers.length === userSequenceAnswers.length &&
           correctAnswers.every((correctAns, i) => {
-            const userVal = userSequenceAnswers[i] ?? ""; // default to empty string if missing
+            const userVal = userSequenceAnswers[i] ?? "";
             return correctAns?.toString().trim() === userVal?.toString().trim();
           });
 
@@ -216,10 +223,69 @@ const QuizPage = () => {
         break;
       }
 
+      case "sorting": {
+        // Ensure userAnswers is always an array
+        const userSorting = Array.isArray(userAnswers[currentQuestion._id])
+          ? userAnswers[currentQuestion._id]
+          : [];
+
+        // Extract values safely from items
+        const items = Array.isArray(currentQuestion.items)
+          ? currentQuestion.items.map((item) => item.value)
+          : [];
+
+        // Generate the correct sorted order
+        const correctSorted =
+          currentQuestion.orderType === "asc"
+            ? [...items].sort((a, b) => a - b)
+            : [...items].sort((a, b) => b - a);
+
+        let isCorrect = false;
+        let feedbackMessage = "⚠️ Please sort the items first!";
+
+        if (userSorting.length > 0) {
+          // Normalize both to numbers for safe comparison
+          const normalizedUser = userSorting.map((v) => Number(v));
+          const normalizedCorrect = correctSorted.map((v) => Number(v));
+
+          isCorrect =
+            JSON.stringify(normalizedUser) ===
+            JSON.stringify(normalizedCorrect);
+
+          feedbackMessage = isCorrect
+            ? `🎉 Correct! You sorted in ${currentQuestion.orderType.toUpperCase()} order!`
+            : `❌ Not quite. Correct order was: ${normalizedCorrect.join(
+                ", "
+              )}`;
+        }
+
+        console.log("👉 Raw User Sorting:", userSorting);
+        console.log("👉 Correct Sorted:", correctSorted);
+        console.log("👉 Order Type:", currentQuestion.orderType);
+        console.log("👉 Is Correct?", isCorrect);
+        console.log("👉 Feedback:", feedbackMessage);
+
+        break;
+      }
+
       default:
         feedbackMessage = "⚠️ Unknown question type";
         break;
     }
+
+    // 🔗 Save result (object, not array!)
+    setUserAnswers((prev) => ({
+      ...prev,
+      [currentQuestion._id]: {
+        givenAnswer:
+          type === "mcq-multiple"
+            ? selectedAnswers
+            : type === "input" || type === "mcq" || type === "true_false"
+            ? userAnswer
+            : prev[currentQuestion._id]?.givenAnswer || [],
+        isCorrect,
+      },
+    }));
 
     setFeedback(feedbackMessage);
     setIsCorrect(isCorrect);
@@ -227,18 +293,39 @@ const QuizPage = () => {
     setTimerRunning(false);
 
     if (isCorrect) {
-      // Increase score but cap at 100
       setSmartScore((prev) => Math.min(prev + 10, 100));
       setTimeout(() => {
         generateNewQuestion();
       }, 1000);
     } else {
-      // Decrease score but don’t let it go below 0
       setSmartScore((prev) => Math.max(prev - 5, 0));
     }
   };
 
-  console.log();
+  // inside QuizPage
+  const handleAnswer = (isCorrect) => {
+    // update score
+    if (isCorrect) {
+      // setScore((prev) => prev + 1);
+    }
+
+    // store answer for review (optional)
+    setUserAnswers((prev) => [
+      ...prev,
+      {
+        questionId: currentQuestion.id,
+        isCorrect,
+      },
+    ]);
+
+    // ✅ give feedback (e.g. explanation or highlight)
+    // setShowExplanation(true);
+
+    // if you want to auto-move on sorting / MCQ:
+    // setTimeout(() => {
+    //   goToNextQuestion();
+    // }, 1500);
+  };
 
   const resetQuiz = () => {
     setCurrentQuestionIndex(0);
@@ -252,11 +339,39 @@ const QuizPage = () => {
     generateNewQuestion();
   };
 
+  const handleAnswerSubmit = (answer) => {
+    alert(`You submitted: ${answer}`);
+  };
+
   const renderQuestionInput = () => {
     if (!currentQuestion) return null;
 
     switch (currentQuestion.type) {
       case "input":
+        return (
+          <BlankInputComponent
+            exampleText="Learn with an example"
+            questionText={currentQuestion.question}
+            onRead={() => readAloud(currentQuestion?.prompt)}
+            images={currentQuestion.images}
+            onSubmit={handleSubmit}
+            answer={userAnswer}
+            onChangeAnswer={(e) => setUserAnswer(e.target.value)}
+            promptText={currentQuestion.prompt || "Enter your answer:"}
+          />
+        );
+
+      case "sorting":
+        return (
+          <SortingQuestion
+            question={currentQuestion.question}
+            items={currentQuestion.items}
+            orderType={currentQuestion.orderType}
+            onAnswer={handleSubmit} // same callback as MCQ, T/F, etc.
+          />
+        );
+
+      case "input1":
         return (
           <input
             type="number"
@@ -502,62 +617,10 @@ const QuizPage = () => {
       return null;
     }
 
-    // Even Number Hunt
-    if (decodedKey === "🔢 Even Number Hunt") {
-      return (
-        <div className="flex justify-center">
-          <motion.div
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ type: "spring", stiffness: 300, damping: 20 }}
-            className="inline-flex flex-wrap justify-left gap-4 p-2 bg-blue-50 rounded-lg"
-          >
-            {currentQuestion.visuals.map((visual, i) => (
-              <motion.div
-                key={i}
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ delay: i * 0.05, type: "spring", stiffness: 300 }}
-                className={`text-4xl p-3 rounded-lg ${
-                  currentQuestion.answer.includes(visual.content) && showResult
-                    ? "bg-green-100 border-2 border-green-400"
-                    : "bg-white border-2 border-gray-200"
-                }`}
-              >
-                {visual.content}
-              </motion.div>
-            ))}
-          </motion.div>
-        </div>
-      );
-    }
-
-    // Skip-Counting Adventure
-    if (decodedKey === "Skip-Counting-pictures") {
+    if (currentQuestion.type === "input1") {
       return (
         <div className="flex justify-left">
-          <motion.div
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ type: "keyframes", stiffness: 300, damping: 20 }}
-            className="inline-flex flex-wrap gap-2 sm:gap-4 p-2 sm:p-4 rounded-lg"
-          >
-            {currentQuestion.visuals.map((group, i) => (
-              <motion.div
-                key={i}
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{
-                  delay: i * 0.05,
-                  type: "keyframes",
-                  stiffness: 300,
-                }}
-                className="p-1 sm:p-2 border-2 border-dashed border-purple-200 rounded-md text-3xl sm:text-5xl"
-              >
-                {group}
-              </motion.div>
-            ))}
-          </motion.div>
+          <EmojiRenderComponent visuals={currentQuestion?.visuals} />
         </div>
       );
     }
@@ -641,7 +704,7 @@ const QuizPage = () => {
 
           {/* Left content */}
           <div className="flex-1 pr-0 md:pr-12">
-            <div>
+            <div className="flex justify-center items-center space-x-2 mb-6">
               <button
                 onClick={() => setShowExample((prev) => !prev)}
                 className="text-[#03a9f4] font-semibold text-sm justify-center leading-6 hover:underline"
@@ -754,7 +817,7 @@ const QuizPage = () => {
                   <button
                     onClick={() => readAloud(currentQuestion?.question)}
                     disabled={isSpeaking}
-                    className="text-xl text-purple-600 hover:text-purple-800 transition-colors flex-shrink-0 mt-1"
+                    className="text-xl text-[#00a1e0] hover:text-purple-800 transition-colors flex-shrink-0 mt-1"
                     aria-label="Read aloud"
                   >
                     {isSpeaking ? <FiVolume /> : <FiVolume2 />}
@@ -791,7 +854,7 @@ const QuizPage = () => {
                         remarkPlugins={[remarkGfm]}
                         components={{
                           p: ({ children }) => (
-                            <p className="text-gray-900 text-sm mb-4 font-normal">
+                            <p className="text-black text-lg leading-6">
                               {children}
                             </p>
                           ),
@@ -852,7 +915,7 @@ const QuizPage = () => {
                 </div>
 
                 {renderVisuals()}
-                {currentQuestion?.prompt && (
+                {/* {currentQuestion?.prompt && (
                   <div className="flex items-center gap-3 text-gray-800 min-h-[4rem]">
                     <button
                       onClick={() => readAloud(currentQuestion?.prompt)}
@@ -869,7 +932,7 @@ const QuizPage = () => {
                       {currentQuestion?.prompt || ""}
                     </ReactMarkdown>
                   </div>
-                )}
+                )} */}
 
                 <div className="flex justify-left mt-5">
                   {renderQuestionInput()}
