@@ -3,16 +3,8 @@ import { motion, AnimatePresence, LayoutGroup } from "framer-motion";
 import { clsx } from "clsx";
 
 // ---------------------------------------------------------------------------
-// 🔹 1. Types & Configuration
+// 🔹 1. Configuration
 // ---------------------------------------------------------------------------
-
-type Icon = string;
-type ItemId = string;
-
-interface GameItem {
-  id: ItemId;
-  icon: Icon;
-}
 
 const LEVELS = [
   { id: 1, pattern: ["♦️", "⭐", "♦️", "⭐"] },
@@ -41,13 +33,13 @@ function useCopyPatternGame() {
     return patternItems.sort(() => Math.random() - 0.5);
   }, [targetPattern]);
 
-  const [pool, setPool] = useState<GameItem[]>(initialPool);
-  const [slots, setSlots] = useState<(GameItem | null)[]>(
+  const [pool, setPool] = useState(initialPool);
+  const [slots, setSlots] = useState(
     Array(targetPattern.length).fill(null)
   );
 
   const placeItem = useCallback(
-    (item: GameItem, slotIndex: number) => {
+    (item, slotIndex) => {
       // Prevent placing if the slot is already occupied
       if (slots[slotIndex] !== null) return;
 
@@ -62,7 +54,7 @@ function useCopyPatternGame() {
   );
 
   const removeItem = useCallback(
-    (slotIndex: number) => {
+    (slotIndex) => {
       const item = slots[slotIndex];
       if (!item) return;
 
@@ -108,15 +100,8 @@ function useCopyPatternGame() {
 // 🔹 3. UI Components (Adapted for Drag-and-Drop)
 // ---------------------------------------------------------------------------
 
-interface SlotProps {
-  index: number;
-  item: GameItem | null;
-  onDrop: (item: GameItem, slotIndex: number) => void;
-  onRemove: (slotIndex: number) => void;
-}
-
-const Slot = React.memo(({ index, item, onDrop, onRemove }: SlotProps) => {
-  const slotRef = useRef<HTMLDivElement>(null);
+const Slot = React.memo(({ index, item, onDrop, onRemove }) => {
+  const slotRef = useRef(null);
   const [isHovered, setIsHovered] = useState(false);
 
   const slotClasses = clsx(
@@ -143,13 +128,7 @@ const Slot = React.memo(({ index, item, onDrop, onRemove }: SlotProps) => {
   );
 });
 
-interface DraggableItemProps {
-  item: GameItem;
-  onDragEnd: (info: any, item: GameItem) => void;
-  containerRef: React.RefObject<HTMLElement> | null;
-}
-
-const DraggableItem = ({ item, onDragEnd, containerRef }: DraggableItemProps) => (
+const DraggableItem = ({ item, onDragEnd, containerRef }) => (
   <motion.div
     layoutId={`card-${item.id}`}
     drag
@@ -173,10 +152,10 @@ export default function CopyPatternGame() {
   const { pool, slots, placeItem, removeItem, isCompleted, goToNextLevel, level } =
     useCopyPatternGame();
 
-  const poolRef = useRef<HTMLDivElement>(null);
-  const slotRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const poolRef = useRef(null);
+  const slotRefs = useRef([]);
 
-  const handleDragEnd = (info: any, item: GameItem) => {
+  const handleDragEnd = (info, item) => {
     const { point } = info;
     let droppedInSlot = false;
 
