@@ -62,7 +62,7 @@ export const class2LessonData = [
     color: "#9dbb00",
     items: [
       {
-        id: "comparing-and-ordering-1",
+        id: "comparing-numbers-up-to-100",
         name: "Comparing numbers up to 100",
       },
       {
@@ -70,7 +70,7 @@ export const class2LessonData = [
         name: "Put numbers up to 100 in order",
       },
       {
-        id: "comparing-and-ordering-3",
+        id: "word-problems-up-to-100",
         name: "Greatest and least - word problems - up to 100",
       },
     ],
@@ -80,11 +80,11 @@ export const class2LessonData = [
     color: "#9dbb00",
     items: [
       {
-        id: "names-of-numbers-1",
+        id: "ordinal-numbers-upto-10",
         name: "Ordinal numbers up to 10th",
       },
       {
-        id: "names-of-numbers-2",
+        id: "nth-letter-in-passage",
         name: "Ordinal numbers up to 100th",
       },
       {
@@ -136,7 +136,7 @@ export const class2LessonData = [
         name: "Review - add one-digit numbers - sums to 10",
       },
       {
-        id: "addition-one-digit-2",
+        id: "ways-to-make-a-number-sums-to-10",
         name: "Review - ways to make a number - sums to 10",
       },
       {

@@ -587,11 +587,11 @@ export const questionsGenerator = {
     const character = ["Riya", "Amit", "Zoya", "Kabir"][
       Math.floor(Math.random() * 4)
     ];
-    const contextLine = `**${character} is making bracelets to gift to friends.**`;
-    const detailLine = `**Each bracelet has ${rubiesPerBracelet} rub${
+    const contextLine = `**${character}** is making bracelets to gift to friends.`;
+    const detailLine = `Each bracelet has **${rubiesPerBracelet} rub${
       rubiesPerBracelet === 1 ? "y" : "ies"
     }.**`;
-    const questionLine = `**How many rubies will ${character} need for ${totalBracelets} bracelets?**`;
+    const questionLine = `How many rubies will **${character}** need for **${totalBracelets}** bracelets?`;
 
     return {
       question: [contextLine, detailLine, questionLine].join("\n\n"),
@@ -645,7 +645,7 @@ export const questionsGenerator = {
 
     return {
       type: "mcq",
-      question: `**Karen began at ${start}. She skip-counted by ${step}s. Could she have said the number ${target}?**`,
+      question: `Karen began at **${start}**. She skip-counted by **${step}s**. Could she have said the number **${target}?**`,
       answer,
       options: ["yes", "no"],
       explanation,
@@ -718,6 +718,207 @@ export const questionsGenerator = {
       answer: nextNumber.toString(),
       visuals: [],
       options: [],
+    };
+  },
+
+  "comparing-numbers-up-to-100": () => {
+    // Generate two random numbers
+    const num1 = Math.floor(Math.random() * 100) + 1;
+    const num2 = Math.floor(Math.random() * 100) + 1;
+
+    // Determine the correct relation
+    let correctAnswer = "";
+    if (num1 > num2) {
+      correctAnswer = "is greater than";
+    } else if (num1 < num2) {
+      correctAnswer = "is less than";
+    } else {
+      correctAnswer = "is equal to";
+    }
+
+    // Options (always same set)
+    const options = ["is greater than", "is less than", "is equal to"];
+
+    // Question statement
+    const questionLine = `Which words make this statement true?\n\n**${num1} ____ ${num2}**`;
+
+    return {
+      question: questionLine,
+      type: "mcq",
+      answer: correctAnswer,
+      options,
+    };
+  },
+
+  "word-problems-up-to-100": () => {
+    // Context types
+    const contexts = [
+      {
+        character: "Matt",
+        title: "Hours of Babysitting",
+        unit: "hours",
+        questionTemplate: (char) =>
+          `In which month did **${char}** babysit the least?`,
+        minOrMax: "min",
+      },
+      {
+        character: "Riya",
+        title: "Temperature Recordings",
+        unit: "°C",
+        questionTemplate: (char) =>
+          `In which month was the temperature the highest for **${char}**?`,
+        minOrMax: "max",
+      },
+      {
+        character: "Kabir",
+        title: "Coins Collected",
+        unit: "coins",
+        questionTemplate: (char) =>
+          `In which month did **${char}** collect the most coins?`,
+        minOrMax: "max",
+      },
+      {
+        character: "Amit",
+        title: "Books Read",
+        unit: "books",
+        questionTemplate: (char) =>
+          `In which month did **${char}** read the fewest books?`,
+        minOrMax: "min",
+      },
+      {
+        character: "Zoya",
+        title: "Money Saved",
+        unit: "₹",
+        questionTemplate: (char) =>
+          `In which month did **${char}** save the most money?`,
+        minOrMax: "max",
+      },
+    ];
+
+    // Pick a random context
+    const context = contexts[Math.floor(Math.random() * contexts.length)];
+
+    // Months & random values
+    const months = ["October", "November", "December", "January"];
+    const values = months.map(() => Math.floor(Math.random() * 50) + 50); // 50–99 range
+
+    // Find correct answer based on context.minOrMax
+    const targetValue =
+      context.minOrMax === "min" ? Math.min(...values) : Math.max(...values);
+
+    const correctMonth = months[values.indexOf(targetValue)];
+
+    // Table Markdown
+    let tableMarkdown = `| Month | ${context.title} |\n|-------|-----------------|\n`;
+    months.forEach((m, i) => {
+      tableMarkdown += `| ${m} | ${values[i]} ${context.unit} |\n`;
+    });
+
+    // Shuffle options
+    const options = [...months].sort(() => Math.random() - 0.5);
+
+    return {
+      question: [
+        `**${
+          context.character
+        }** is tracking **${context.title.toLowerCase()}**.`,
+        context.questionTemplate(context.character),
+      ].join("\n\n"),
+      table: tableMarkdown.trim(),
+      type: "mcq",
+      answer: correctMonth,
+      options,
+    };
+  },
+
+  "ordinal-numbers-upto-10": () => {
+    // Emoji pool (can be expanded)
+    const emojiPool = [
+      "🚂",
+      "✈️",
+      "🧸",
+      "🚗",
+      "🐶",
+      "🍎",
+      "⚽",
+      "🐱",
+      "🍩",
+      "🌟",
+    ];
+
+    // Choose a random subset for the pattern
+    const patternLength = Math.floor(Math.random() * 3) + 2; // 2–4 items
+    const pattern = [];
+    for (let i = 0; i < patternLength; i++) {
+      const randEmoji = emojiPool[Math.floor(Math.random() * emojiPool.length)];
+      if (!pattern.includes(randEmoji)) {
+        pattern.push(randEmoji);
+      } else {
+        i--; // ensure uniqueness
+      }
+    }
+
+    // Generate sequence
+    const sequenceLength = 12;
+    const sequence = Array.from(
+      { length: sequenceLength },
+      (_, i) => pattern[i % pattern.length]
+    );
+
+    // Pick a random position
+    const position = Math.floor(Math.random() * sequenceLength) + 1;
+    const correctAnswer = sequence[position - 1];
+
+    // Options (pick from pattern, shuffle)
+    const options = [...pattern].sort(() => Math.random() - 0.5);
+
+    // Question
+    const questionLine = `The first picture is ${sequence[0]}. Which picture is **${position}th**?`;
+
+    return {
+      question: questionLine,
+      visuals: sequence, // 👈 emojis sequence
+      type: "mcq",
+      answer: correctAnswer,
+      options,
+      optionStyle: { fontSize: 32, padding: 12 }, // 👈 style hint for rendering
+    };
+  },
+
+  "nth-letter-in-passage": () => {
+    // Pool of sample passages
+    const passages = [
+      "The Queen of Hearts, she made some Tarts, all on a Summer's Day; The Knave of Hearts, he stole those Tarts, and took them clean away.",
+      "Twinkle, twinkle, little star, How I wonder what you are! Up above the world so high, Like a diamond in the sky.",
+      "Jack and Jill went up the hill to fetch a pail of water; Jack fell down and broke his crown, and Jill came tumbling after.",
+      "Humpty Dumpty sat on a wall, Humpty Dumpty had a great fall. All the king’s horses and all the king’s men couldn’t put Humpty together again.",
+    ];
+
+    // Pick a random passage
+    const passage = passages[Math.floor(Math.random() * passages.length)];
+
+    // Pick a random letter index (avoid too small or too large)
+    const letterIndex = Math.floor(Math.random() * (passage.length - 10)) + 5;
+
+    // Correct answer = that letter
+    const correctAnswer = passage[letterIndex - 1];
+
+    // Highlight every 10th letter (for rendering hint)
+    const highlightedPassage = passage
+      .split("")
+      .map((ch, idx) =>
+        (idx + 1) % 10 === 0
+          ? `<span style="color: orange; font-weight: bold">${ch}</span>`
+          : ch
+      )
+      .join("");
+
+    return {
+      question: `What is the **${letterIndex}th** letter in this passage?`,
+      hint: "Every 10th letter is orange.",
+      passage: highlightedPassage, // use HTML/Markdown render
+      type: "input", // user types the letter
+      answer: correctAnswer,
     };
   },
 
@@ -2461,6 +2662,75 @@ Time = ${totalLength} ÷ ${relativeSpeed} = ${Math.round(time)} sec`,
       orderType,
     };
   },
+
+  "eng-fill-blank": () => {
+    return [
+      {
+        id: 1,
+        sentence: "The cat is ___ and the dog is ___.",
+        blanks: [{ answer: "black" }, { answer: "white" }],
+        options: ["black", "white", "blue", "fast"],
+      },
+      {
+        id: 2,
+        sentence: "I ___ to school and I ___ my homework.",
+        blanks: [{ answer: "go" }, { answer: "finish" }],
+        options: ["run", "finish", "go", "eat"],
+      },
+      {
+        id: 3,
+        sentence: "She likes ___ but hates ___.",
+        blanks: [{ answer: "apples" }, { answer: "bananas" }],
+        options: ["bananas", "cats", "apples", "dogs"],
+      },
+    ];
+  },
+
+
+ "ways-to-make-a-number-sums-to-10": (numOptions = 4) => {
+  // Random target between 1 and 10
+  const target = Math.floor(Math.random() * 10) + 1;
+
+  // Helper: random integer in range
+  const randomInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+
+  // All correct pairs: a + b = target
+  const correctPairs = [];
+  for (let a = 0; a <= target; a++) {
+    correctPairs.push(`${a} + ${target - a}`);
+  }
+
+  // Pick one correct answer at random
+  const correctAnswer = correctPairs[randomInt(0, correctPairs.length - 1)];
+
+  // Generate distractors (incorrect but plausible sums)
+  const distractors = new Set();
+  while (distractors.size < numOptions - 1) {
+    // Create a sum close to target ±3, but not equal to target
+    const offset = randomInt(1, 3) * (Math.random() < 0.5 ? -1 : 1);
+    const sumValue = target + offset;
+
+    // Randomly split sumValue into two parts
+    const a = randomInt(0, sumValue);
+    const b = sumValue - a;
+    const option = `${a} + ${b}`;
+
+    if (!correctPairs.includes(option) && !distractors.has(option)) {
+      distractors.add(option);
+    }
+  }
+
+  // Combine and shuffle
+  const options = [...distractors, correctAnswer].sort(() => Math.random() - 0.5);
+
+  return {
+    question: `Which of the following shows a correct way to make ${target}?`,
+    options,
+    answer: correctAnswer,
+    type: "mcq",
+  };
+},
+
   // Example usage:
   // const question = ordinalEmojiGenerator();
   // console.log(question);

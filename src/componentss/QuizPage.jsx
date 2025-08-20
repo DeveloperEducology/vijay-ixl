@@ -12,6 +12,7 @@ import { FiVolume, FiVolume2 } from "react-icons/fi";
 import SortingQuestion from "../pages/SortingQuestion";
 import BlankInputComponent from "../pages/BlankInputComponent";
 import EmojiRenderComponent from "./EmojiRenderComponent";
+import FillInTheBlanksQuiz from "./English/FillInTheBlanksQuiz";
 
 const QuizPage = () => {
   const { topicId } = useParams();
@@ -347,6 +348,10 @@ const QuizPage = () => {
     if (!currentQuestion) return null;
 
     switch (currentQuestion.type) {
+      case "english-fill":
+        return (
+          <FillInTheBlanksQuiz />
+        )
       case "input":
         return (
           <BlankInputComponent
@@ -443,22 +448,31 @@ const QuizPage = () => {
                 const isWrong =
                   showResult && isSelected && !correctAnswers.includes(option);
 
+                // 👇 Extract optionStyle from currentQuestion
+                const optionStyle = currentQuestion.optionStyle || {};
+                const inlineStyle = {
+                  fontSize: optionStyle.fontSize || 16,
+                  padding: optionStyle.padding || "0.5rem",
+                  ...optionStyle, // in case more styles are added later
+                };
+
                 return (
                   <button
                     key={option}
                     onClick={() => setUserAnswer(option)}
                     disabled={showResult}
-                    className={`flex items-center rounded border w-full md:w-auto px-5 h-12 cursor-pointer select-none transition-all duration-200 text-sm font-medium
-            ${isCorrect ? "border-green-500 bg-green-200" : ""}
-            ${isWrong ? "border-red-500 bg-red-200" : ""}
-            ${
-              isSelected && !showResult
-                ? "border-sky-900 bg-sky-200"
-                : !isSelected && !showResult
-                ? "border-sky-300 hover:border-purple-300"
-                : ""
-            }
-          `}
+                    style={inlineStyle} // 👈 Apply inline style
+                    className={`flex items-center rounded border w-full md:w-auto cursor-pointer select-none transition-all duration-200 font-medium
+                ${isCorrect ? "border-green-500 bg-green-200" : ""}
+                ${isWrong ? "border-red-500 bg-red-200" : ""}
+                ${
+                  isSelected && !showResult
+                    ? "border-sky-900 bg-sky-200"
+                    : !isSelected && !showResult
+                    ? "border-sky-300 hover:border-purple-300"
+                    : ""
+                }
+              `}
                   >
                     <span className="text-gray-900 whitespace-nowrap">
                       {currentQuestion?.latex === true ? (
@@ -831,11 +845,12 @@ const QuizPage = () => {
                         <h3 className="text-gray-700 font-semibold mb-2">
                           Passage:
                         </h3>
-                        <div className="bg-white/70 rounded-md p-3 border border-gray-200 text-gray-800 text-md">
-                          <ReactMarkdown>
-                            {currentQuestion.passage}
-                          </ReactMarkdown>
-                        </div>
+                        <div
+                          className="bg-white/70 rounded-md p-3 border border-gray-200 text-gray-800 text-md w-full max-w-full"
+                          dangerouslySetInnerHTML={{
+                            __html: currentQuestion.passage,
+                          }}
+                        />
                       </div>
                     )}
 
@@ -877,40 +892,42 @@ const QuizPage = () => {
                     )}
 
                     {/* Table */}
-                    {currentQuestion?.table && (
-                      <ReactMarkdown
-                        remarkPlugins={[remarkGfm]}
-                        components={{
-                          table: ({ node, ...props }) => (
-                            <table className="w-auto border border-gray-400 border-collapse mx-auto my-4 text-sm">
-                              {props.children}
-                            </table>
-                          ),
-                          thead: ({ node, ...props }) => (
-                            <thead className="bg-gray-100 text-center text-[14px]">
-                              {props.children}
-                            </thead>
-                          ),
-                          tr: ({ node, ...props }) => (
-                            <tr className="border-b border-gray-300 text-center">
-                              {props.children}
-                            </tr>
-                          ),
-                          th: ({ node, ...props }) => (
-                            <th className="border border-gray-400 px-2 py-1 font-semibold min-w-[100px]">
-                              {props.children}
-                            </th>
-                          ),
-                          td: ({ node, ...props }) => (
-                            <td className="border border-gray-300 px-2 py-1">
-                              {props.children}
-                            </td>
-                          ),
-                        }}
-                      >
-                        {currentQuestion.table}
-                      </ReactMarkdown>
-                    )}
+                    <div className="flex justify-left items-left mt-4">
+                      {currentQuestion?.table && (
+                        <ReactMarkdown
+                          remarkPlugins={[remarkGfm]}
+                          components={{
+                            table: ({ node, ...props }) => (
+                              <table className="w-auto border border-gray-400 border-collapse mx-auto my-4 text-sm">
+                                {props.children}
+                              </table>
+                            ),
+                            thead: ({ node, ...props }) => (
+                              <thead className="bg-gray-100 text-center text-[14px]">
+                                {props.children}
+                              </thead>
+                            ),
+                            tr: ({ node, ...props }) => (
+                              <tr className="border-b border-gray-300 text-center">
+                                {props.children}
+                              </tr>
+                            ),
+                            th: ({ node, ...props }) => (
+                              <th className="border border-gray-400 px-2 py-1 font-semibold min-w-[100px]">
+                                {props.children}
+                              </th>
+                            ),
+                            td: ({ node, ...props }) => (
+                              <td className="border border-gray-300 px-2 py-1">
+                                {props.children}
+                              </td>
+                            ),
+                          }}
+                        >
+                          {currentQuestion.table}
+                        </ReactMarkdown>
+                      )}
+                    </div>
                   </div>
                 </div>
 

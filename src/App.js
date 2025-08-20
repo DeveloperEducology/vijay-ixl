@@ -12,6 +12,9 @@ import IXLHomePage from "./componentss/IXLHomePage";
 import SSC_CHSL_MockTest from "./componentss/SSC_CHSL_MockTest";
 import Vijay from "./componentss/Vijay";
 import TestUI from "./pages/TestUI";
+import PatternGame from "./pages/PatternGame";
+import EngAnimation from "./componentss/English/EngAnimation";
+import AdditionQuiz from "./componentss/AddRobotsQuestion";
 
 function App() {
   return (
@@ -29,6 +32,9 @@ function App() {
       <Route path="/ssc" element={<SSC_CHSL_MockTest />} />
       <Route path="/kid-math" element={<MathTopicsList />} />
       <Route path="/testui" element={<TestUI />} />
+      <Route path="/pattern" element={<PatternGame />} />
+      <Route path="/q" element={<AdditionQuiz />} />
+      <Route path="/eng" element={<EngAnimation />} />
       <Route path="/quiz/:topicId" element={<QuizPage />} />
 
       <Route path="/kid/:topicId" element={<KidFriendlyPage />} />
