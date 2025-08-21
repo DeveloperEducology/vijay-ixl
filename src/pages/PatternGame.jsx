@@ -24,13 +24,23 @@ function useCopyPatternGame() {
   const currentLevel = LEVELS[levelIndex];
   const targetPattern = currentLevel.pattern;
 
-  const initialPool = useMemo(() => {
-    const patternItems = targetPattern.map((icon, index) => ({
-      id: `item-${icon}-${index}`,
-      icon,
-    }));
+  // Helper function to generate a unique, shuffled pool for a given level
+  const createPoolForLevel = useCallback((level) => {
+    const iconCounts = {};
+    const patternItems = level.pattern.map((icon) => {
+        const count = iconCounts[icon] || 0;
+        iconCounts[icon] = count + 1;
+        // FIXED: Make item IDs unique across levels to prevent key collisions during transitions.
+        return {
+            id: `level-${level.id}-item-${icon}-${count}`,
+            icon,
+        };
+    });
     return patternItems.sort(() => Math.random() - 0.5);
-  }, [targetPattern]);
+  }, []);
+
+
+  const initialPool = useMemo(() => createPoolForLevel(currentLevel), [currentLevel, createPoolForLevel]);
 
   const [pool, setPool] = useState(initialPool);
   const [slots, setSlots] = useState(
@@ -51,17 +61,16 @@ function useCopyPatternGame() {
   );
 
   const placeItemByClick = useCallback((itemToPlace) => {
-    const correctEmptyIndex = slots.findIndex(
-        (slot, index) => slot === null && targetPattern[index] === itemToPlace.icon
-    );
-    if (correctEmptyIndex === -1) return;
+    const firstEmptyIndex = slots.findIndex(slot => slot === null);
+    if (firstEmptyIndex === -1) return;
+
     setSlots((prevSlots) => {
         const newSlots = [...prevSlots];
-        newSlots[correctEmptyIndex] = itemToPlace;
+        newSlots[firstEmptyIndex] = itemToPlace;
         return newSlots;
     });
     setPool((prevPool) => prevPool.filter((p) => p.id !== itemToPlace.id));
-  }, [slots, targetPattern]);
+  }, [slots]);
 
   const removeItem = useCallback(
     (slotIndex) => {
@@ -86,12 +95,13 @@ function useCopyPatternGame() {
     const nextLevelIndex = (levelIndex + 1) % LEVELS.length;
     setLevelIndex(nextLevelIndex);
     const nextLevel = LEVELS[nextLevelIndex];
-    const nextPool = nextLevel.pattern
-      .map((icon, index) => ({ id: `item-${icon}-${index}`, icon }))
-      .sort(() => Math.random() - 0.5);
+    
+    // Use the reliable helper function to create the next pool
+    const nextPool = createPoolForLevel(nextLevel);
+
     setSlots(Array(nextLevel.pattern.length).fill(null));
     setPool(nextPool);
-  }, [levelIndex]);
+  }, [levelIndex, createPoolForLevel]);
 
   return {
     pool,
@@ -110,7 +120,6 @@ function useCopyPatternGame() {
 // ---------------------------------------------------------------------------
 
 const Slot = React.memo(({ index, item, onRemove }) => {
-  // Responsive classes for size
   const slotClasses = clsx(
     "w-16 h-16 sm:w-20 sm:h-20 rounded-lg flex items-center justify-center transition-all duration-300",
     {
@@ -143,7 +152,6 @@ const DraggableItem = ({ item, onDragEnd, containerRef, onClick }) => (
     dragElastic={0.4}
     onClick={() => onClick && onClick(item)}
     onDragEnd={(event, info) => onDragEnd(info, item)}
-    // Responsive classes for size and text
     className="w-14 h-14 sm:w-16 sm:h-16 flex items-center justify-center text-2xl sm:text-3xl bg-white rounded-lg shadow-lg cursor-grab active:cursor-grabbing"
     whileHover={{ scale: 1.1, y: -5, boxShadow: "0px 10px 20px rgba(0,0,0,0.1)" }}
     whileTap={{ scale: 0.9 }}
@@ -179,20 +187,17 @@ export default function CopyPatternGame() {
   return (
     <div className="p-4 sm:p-6 flex flex-col items-center gap-6 bg-gradient-to-b from-slate-50 to-slate-200 min-h-screen font-sans w-full">
       <header className="text-center">
-        {/* Responsive text sizes */}
         <h1 className="text-3xl sm:text-4xl font-bold text-gray-800">Pattern Master</h1>
         <p className="text-base sm:text-lg text-gray-600 mt-2">
           Level {level.id}: Recreate the sequence below.
         </p>
       </header>
 
-      {/* Target Pattern */}
       <div className="flex flex-wrap justify-center gap-3 sm:gap-4 text-3xl sm:text-4xl p-3 sm:p-4 bg-white/80 rounded-xl shadow-md backdrop-blur-sm">
         {level.pattern.map((icon, i) => <span key={`target-${i}`}>{icon}</span>)}
       </div>
 
       <LayoutGroup>
-        {/* User Slots (Drop Zone) */}
         <div className="flex flex-wrap justify-center gap-2 sm:gap-4 p-2">
           {slots.map((item, i) => (
             <div key={`slot-wrapper-${i}`} ref={(el) => (slotRefs.current[i] = el)}>
@@ -201,7 +206,6 @@ export default function CopyPatternGame() {
           ))}
         </div>
 
-        {/* Completion Message & Button */}
         <div className="h-16 flex items-center">
           <AnimatePresence>
             {isCompleted && (
@@ -218,7 +222,6 @@ export default function CopyPatternGame() {
           </AnimatePresence>
         </div>
 
-        {/* Item Pool (Drag Source) */}
         <div
           ref={poolRef}
           className="flex flex-wrap justify-center items-start gap-3 sm:gap-4 mt-4 p-4 min-h-[120px] w-full max-w-3xl bg-gray-900/10 rounded-xl"
