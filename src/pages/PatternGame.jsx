@@ -13,10 +13,10 @@ const LEVELS = [
   { id: 4, pattern: ["🚀", "🪐", "✨", "🚀", "🪐", "✨", "🚀"] },
 ];
 
-const motionTransition = { type: "spring", stiffness: 400, damping: 30 };
+const motionTransition = { type: "spring", stiffness: 500, damping: 40 };
 
 // ---------------------------------------------------------------------------
-// 🔹 2. Custom Hook: Game Logic Engine (Refactored for Levels)
+// 🔹 2. Custom Hook: Game Logic Engine
 // ---------------------------------------------------------------------------
 
 function useCopyPatternGame() {
@@ -25,7 +25,6 @@ function useCopyPatternGame() {
   const targetPattern = currentLevel.pattern;
 
   const initialPool = useMemo(() => {
-    // Shuffle the pool for a better challenge
     const patternItems = targetPattern.map((icon, index) => ({
       id: `item-${icon}-${index}`,
       icon,
@@ -38,11 +37,9 @@ function useCopyPatternGame() {
     Array(targetPattern.length).fill(null)
   );
 
-  const placeItem = useCallback(
+  const placeItemByDrag = useCallback(
     (item, slotIndex) => {
-      // Prevent placing if the slot is already occupied
       if (slots[slotIndex] !== null) return;
-
       setSlots((prev) => {
         const newSlots = [...prev];
         newSlots[slotIndex] = item;
@@ -53,11 +50,23 @@ function useCopyPatternGame() {
     [slots]
   );
 
+  const placeItemByClick = useCallback((itemToPlace) => {
+    const correctEmptyIndex = slots.findIndex(
+        (slot, index) => slot === null && targetPattern[index] === itemToPlace.icon
+    );
+    if (correctEmptyIndex === -1) return;
+    setSlots((prevSlots) => {
+        const newSlots = [...prevSlots];
+        newSlots[correctEmptyIndex] = itemToPlace;
+        return newSlots;
+    });
+    setPool((prevPool) => prevPool.filter((p) => p.id !== itemToPlace.id));
+  }, [slots, targetPattern]);
+
   const removeItem = useCallback(
     (slotIndex) => {
       const item = slots[slotIndex];
       if (!item) return;
-
       setSlots((prev) => {
         const newSlots = [...prev];
         newSlots[slotIndex] = null;
@@ -80,7 +89,6 @@ function useCopyPatternGame() {
     const nextPool = nextLevel.pattern
       .map((icon, index) => ({ id: `item-${icon}-${index}`, icon }))
       .sort(() => Math.random() - 0.5);
-
     setSlots(Array(nextLevel.pattern.length).fill(null));
     setPool(nextPool);
   }, [levelIndex]);
@@ -88,7 +96,8 @@ function useCopyPatternGame() {
   return {
     pool,
     slots,
-    placeItem,
+    placeItemByDrag,
+    placeItemByClick,
     removeItem,
     isCompleted,
     goToNextLevel,
@@ -97,29 +106,27 @@ function useCopyPatternGame() {
 }
 
 // ---------------------------------------------------------------------------
-// 🔹 3. UI Components (Adapted for Drag-and-Drop)
+// 🔹 3. UI Components (Mobile Responsive)
 // ---------------------------------------------------------------------------
 
-const Slot = React.memo(({ index, item, onDrop, onRemove }) => {
-  const slotRef = useRef(null);
-  const [isHovered, setIsHovered] = useState(false);
-
+const Slot = React.memo(({ index, item, onRemove }) => {
+  // Responsive classes for size
   const slotClasses = clsx(
-    "w-20 h-20 rounded-lg flex items-center justify-center transition-all duration-300",
+    "w-16 h-16 sm:w-20 sm:h-20 rounded-lg flex items-center justify-center transition-all duration-300",
     {
-      "bg-sky-100 border-2 border-dashed border-sky-300": !item,
-      "bg-white shadow-inner": item,
-      "bg-green-200 border-green-400 scale-105": isHovered && !item,
+      "bg-sky-100/80 border-2 border-dashed border-sky-300": !item,
+      "bg-white/90 shadow-inner": item,
     }
   );
 
   return (
-    <div ref={slotRef} className={slotClasses}>
+    <div className={slotClasses}>
       {item ? (
         <DraggableItem
           item={item}
           onDragEnd={() => onRemove(index)}
-          containerRef={null} // No constraints when dragging out of a slot
+          onClick={() => onRemove(index)}
+          containerRef={null}
         />
       ) : (
         <div className="w-full h-full" />
@@ -128,15 +135,17 @@ const Slot = React.memo(({ index, item, onDrop, onRemove }) => {
   );
 });
 
-const DraggableItem = ({ item, onDragEnd, containerRef }) => (
+const DraggableItem = ({ item, onDragEnd, containerRef, onClick }) => (
   <motion.div
     layoutId={`card-${item.id}`}
     drag
     dragConstraints={containerRef}
     dragElastic={0.4}
+    onClick={() => onClick && onClick(item)}
     onDragEnd={(event, info) => onDragEnd(info, item)}
-    className="w-16 h-16 flex items-center justify-center text-3xl bg-white rounded-lg shadow-lg cursor-grab active:cursor-grabbing"
-    whileHover={{ scale: 1.1, y: -5 }}
+    // Responsive classes for size and text
+    className="w-14 h-14 sm:w-16 sm:h-16 flex items-center justify-center text-2xl sm:text-3xl bg-white rounded-lg shadow-lg cursor-grab active:cursor-grabbing"
+    whileHover={{ scale: 1.1, y: -5, boxShadow: "0px 10px 20px rgba(0,0,0,0.1)" }}
     whileTap={{ scale: 0.9 }}
     transition={motionTransition}
   >
@@ -145,11 +154,11 @@ const DraggableItem = ({ item, onDragEnd, containerRef }) => (
 );
 
 // ---------------------------------------------------------------------------
-// 🔹 4. Main Game Component
+// 🔹 4. Main Game Component (Mobile Responsive)
 // ---------------------------------------------------------------------------
 
 export default function CopyPatternGame() {
-  const { pool, slots, placeItem, removeItem, isCompleted, goToNextLevel, level } =
+  const { pool, slots, placeItemByDrag, placeItemByClick, removeItem, isCompleted, goToNextLevel, level } =
     useCopyPatternGame();
 
   const poolRef = useRef(null);
@@ -157,44 +166,37 @@ export default function CopyPatternGame() {
 
   const handleDragEnd = (info, item) => {
     const { point } = info;
-    let droppedInSlot = false;
-
     slotRefs.current.forEach((slotEl, index) => {
       if (slotEl) {
         const { top, left, right, bottom } = slotEl.getBoundingClientRect();
         if (point.x > left && point.x < right && point.y > top && point.y < bottom) {
-          placeItem(item, index);
-          droppedInSlot = true;
+          placeItemByDrag(item, index);
         }
       }
     });
   };
 
   return (
-    <div className="p-4 sm:p-8 flex flex-col items-center gap-8 bg-slate-100 min-h-screen font-sans">
+    <div className="p-4 sm:p-6 flex flex-col items-center gap-6 bg-gradient-to-b from-slate-50 to-slate-200 min-h-screen font-sans w-full">
       <header className="text-center">
-        <h1 className="text-4xl font-bold text-gray-800">Pattern Master</h1>
-        <p className="text-lg text-gray-600 mt-2">
+        {/* Responsive text sizes */}
+        <h1 className="text-3xl sm:text-4xl font-bold text-gray-800">Pattern Master</h1>
+        <p className="text-base sm:text-lg text-gray-600 mt-2">
           Level {level.id}: Recreate the sequence below.
         </p>
       </header>
 
       {/* Target Pattern */}
-      <div className="flex gap-4 sm:gap-6 text-4xl p-4 bg-white rounded-xl shadow-md">
+      <div className="flex flex-wrap justify-center gap-3 sm:gap-4 text-3xl sm:text-4xl p-3 sm:p-4 bg-white/80 rounded-xl shadow-md backdrop-blur-sm">
         {level.pattern.map((icon, i) => <span key={`target-${i}`}>{icon}</span>)}
       </div>
 
       <LayoutGroup>
         {/* User Slots (Drop Zone) */}
-        <div className="flex flex-wrap justify-center gap-4">
+        <div className="flex flex-wrap justify-center gap-2 sm:gap-4 p-2">
           {slots.map((item, i) => (
             <div key={`slot-wrapper-${i}`} ref={(el) => (slotRefs.current[i] = el)}>
-              <Slot
-                index={i}
-                item={item}
-                onDrop={placeItem}
-                onRemove={removeItem}
-              />
+              <Slot index={i} item={item} onRemove={removeItem} />
             </div>
           ))}
         </div>
@@ -208,7 +210,7 @@ export default function CopyPatternGame() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
                 onClick={goToNextLevel}
-                className="px-8 py-3 text-xl font-semibold text-white bg-green-500 rounded-lg shadow-lg hover:bg-green-600 transition-transform hover:scale-105"
+                className="px-6 py-3 text-lg sm:text-xl font-semibold text-white bg-green-500 rounded-lg shadow-lg hover:bg-green-600 transition-transform hover:scale-105 active:scale-95"
               >
                 ✅ Well Done! Next Level
               </motion.button>
@@ -219,7 +221,7 @@ export default function CopyPatternGame() {
         {/* Item Pool (Drag Source) */}
         <div
           ref={poolRef}
-          className="flex flex-wrap justify-center gap-4 mt-4 p-4 min-h-[120px] w-full max-w-2xl bg-gray-200 rounded-xl"
+          className="flex flex-wrap justify-center items-start gap-3 sm:gap-4 mt-4 p-4 min-h-[120px] w-full max-w-3xl bg-gray-900/10 rounded-xl"
         >
           <AnimatePresence>
             {pool.map((item) => (
@@ -227,6 +229,7 @@ export default function CopyPatternGame() {
                 key={item.id}
                 item={item}
                 onDragEnd={handleDragEnd}
+                onClick={placeItemByClick}
                 containerRef={poolRef}
               />
             ))}
