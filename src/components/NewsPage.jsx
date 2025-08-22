@@ -24,7 +24,7 @@ const sampleNewsData = [
         category: 'జాతీయం',
         headline: 'దిల్లీ మద్యం కేసు.. కేజ్రీవాల్‌కు మరోసారి నిరాశ',
         body: 'దిల్లీ మద్యం విధానానికి సంబంధించిన మనీలాండరింగ్‌ కేసులో ముఖ్యమంత్రి అరవింద్‌ కేజ్రీవాల్‌కు మరోసారి నిరాశ ఎదురైంది. ఆయన దాఖలు చేసుకున్న మధ్యంతర బెయిల్‌ పిటిషన్‌ను రౌస్‌ అవెన్యూ ప్రత్యేక కోర్టు కొట్టివేసింది.',
-        imageUrl: 'https://media.assettype.com/eenadu%2F2024-06%2F05d4369a-a044-49f9-a1f2-70231a49f7c0%2FArvind_Kejriwal__2_.jpg?w=1600&auto=format%2Ccompress&fit=max',
+        imageUrl: 'https://www.hindustantimes.com/ht-img/img/2024/06/01/550x309/ANI-20240531343-0_1717236444166_1717236460578.jpg',
         author: {
             name: 'ఈనాడు',
             imageUrl: 'https://placehold.co/100x100/bfdbfe/1e3a8a?text=Eenadu',
@@ -32,7 +32,114 @@ const sampleNewsData = [
         date: '2025-08-22',
         sourceUrl: 'https://www.eenadu.net/telugu-news/delhi/arvind-kejriwal-interim-bail-petition-dismissed/121012355'
     },
-     // ... other news items from previous steps
+     
+{
+        id: 2,
+        category: 'అంతర్జాతీయం',
+        headline: 'ఉక్రెయిన్ యుద్ధం: రష్యా మరో పెద్ద నగరాన్ని స్వాధీనం చేసుకుంది',
+        body: 'ఉక్రెయిన్ తూర్పు ప్రాంతంలోని వాగ్నెర్ బ్యాటలియన్లతో కూడిన రష్యన్ సైన్యం పోపాస్నా నగరాన్ని పూర్తిగా స్వాధీనం చేసుకుంది. ఈ విషయాన్ని రష్యన్ రక్షణ మంత్రిత్వ శాఖ అధికారికంగా ప్రకటించింది.',
+        imageUrl: 'https://www.aljazeera.com/wp-content/uploads/2025/05/2025-05-09T160340Z_543039618_RC26EEAXUV6Z_RTRMADP_3_WW2-ANNIVERSARY-DONETSK-REGION-1746857540.jpg?resize=770%2C513&quality=80',
+        author: {
+            name: 'ఈనాడు',
+            imageUrl: 'https://placehold.co/100x100/f5f3ff/7e22c7?text=Eenadu',
+        },
+        date: '2025-08-21',
+        sourceUrl: 'https://www.eenadu.net/international/ukraine-war-russia-captures-popasna-eastern-donetsk/120988765'
+    },
+
+    // క్రీడలు
+    {
+        id: 3,
+        category: 'క్రీడలు',
+        headline: 'ఐపీఎల్ 2025: సన్రైజర్స్ హైదరాబాద్ ఫైనల్‌కు చేరుకుంది',
+        body: 'ఐపీఎల్ 2025 సీజన్‌లో భాగంగా జరిగిన క్వాలిఫయర్ 2 మ్యాచ్‌లో సన్రైజర్స్ హైదరాబాద్, రాయల్ ఛాలెంజర్స్ బెంగళూరుపై 7 వికెట్ల తేడాతో ఘన విజయం సాధించి ఫైనల్‌కు చేరుకుంది.',
+        imageUrl: 'https://media.crictracker.com/media/attachments/1683985707333_Sunrisers-Hyderabad-vs-Lucknow-Super-Giants.jpeg',
+        author: {
+            name: 'ఈనాడు',
+            imageUrl: 'https://placehold.co/100x100/a7f3d0/047857?text=Eenadu',
+        },
+        date: '2025-08-20',
+        sourceUrl: 'https://www.eenadu.net/sports/ipl-2025-hyderabad-reaches-final-after-beating-rcb/120977210'
+    },
+
+    // విద్య
+    {
+        id: 4,
+        category: 'విద్య',
+        headline: 'NEET-UG 2025: ఉజ్జాయిన్ ల్యాబ్ లీకేజీ కేసులో మరో 6 మంది అరెస్ట్',
+        body: 'NEET-UG 2025 పేపర్ లీకేజీ కేసులో ఉజ్జాయిన్ ల్యాబ్ సంబంధిత మరో 6 మందిని సీబీఐ అరెస్ట్ చేసింది. దీంతో ఇప్పటివరకు అరెస్ట్ అయిన వారి సంఖ్య 14కి చేరింది.',
+        imageUrl: 'https://medicaldialogues.in/h-upload/2024/12/02/263198-neet-ug-2025.jpg',
+        author: {
+            name: 'ఈనాడు',
+            imageUrl: 'https://placehold.co/100x100/dbeafe/1e40af?text=Eenadu',
+        },
+        date: '2025-08-19',
+        sourceUrl: 'https://www.eenadu.net/education/neet-ug-2025-paper-leak-updates-six-more-arrested-in-ujjain-lab-case/120965432'
+    },
+
+    // సినిమా
+    {
+        id: 5,
+        category: 'సినిమా',
+        headline: 'ఎన్టీఆర్ బయోపిక్: ప్రశాంత్ నీల్ దర్శకత్వంలో భారీ ప్రాజెక్ట్',
+        body: 'మెగా పవర్ స్టార్ ఎన్టీఆర్ జీవితంపై ప్రశాంత్ నీల్ దర్శకత్వంలో భారీ బయోపిక్ తెరకెక్కనుంది. యష్ స్టైల్ లో ఈ చిత్రం తెరకెక్కనుండటంతో అంచనాలు భారీగా పెరిగాయి.',
+        imageUrl: 'https://content.tupaki.com/en/feeds/2024/11/09/582975-neel.webp',
+        author: {
+            name: 'ఈనాడు',
+            imageUrl: 'https://placehold.co/100x100/fca5a5/991b1b?text=Eenadu',
+        },
+        date: '2025-08-18',
+        sourceUrl: 'https://www.eenadu.net/telugu-cinema/ntr-biopic-prashanth-neel-directs-yash-style-film/120954321'
+    },
+
+    // జాతీయం
+    {
+        id: 6,
+        category: 'జాతీయం',
+        headline: 'మోడీ ప్రభుత్వం కొత్త విద్యా విధానంపై సుప్రీంకోర్ట్ కీలక వ్యాఖ్యలు',
+        body: 'కేంద్ర ప్రభుత్వం అమలు చేస్తున్న న్యూ ఎడ్యుకేషన్ పాలసీ (NEP 2020)పై సుప్రీంకోర్ట్ కీలక వ్యాఖ్యలు చేసింది. విద్యారంగంలో సమగ్ర మార్పులకు ఇది బలమైన మైలురాయి అని పేర్కొంది.',
+        imageUrl: 'https://www.newsband.in/uploads/blog_main_img/7f3e0f318aa56630620c7f7dd1be6502_1.jpg',
+        author: {
+            name: 'ఈనాడు',
+            imageUrl: 'https://placehold.co/100x100/fed7d7/cc0000?text=Eenadu',
+        },
+        date: '2025-08-17',
+        sourceUrl: 'https://www.eenadu.net/national/supreme-court-on-new-education-policy-nep-2020/120943210'
+    },
+
+    // క్రీడలు with Video
+    {
+        id: 7,
+        category: 'క్రీడలు',
+        headline: 'సచిన్ రెకార్డు దిగ్విజయ్ సాధించాడు!',
+        body: 'భారత యువ క్రికెటర్ దిగ్విజయ్ సాధ్ అంతర్జాతీయ టెస్టుల్లో సచిన్ టెండూల్కర్ రికార్డును అధిగమించి 200 వికెట్లు సాధించాడు. ఇంగ్లాండ్ తో జరిగిన రెండో టెస్ట్ లో చివరి వికెట్ ను పడగొట్టి చరిత్ర సృష్టించాడు.',
+        imageUrl: 'https://img.etimg.com/thumb/width-420,height-315,imgsize-41032,resizemode-75,msid-120575285/news/sports/sachin-tendulkar-at-52-a-look-back-at-the-master-blasters-memorable-world-cup-knocks/sachin-tendulkar.jpg',
+        videoId: 'XyX5R4XZz9U',
+        author: {
+            name: 'ఈనాడు',
+            imageUrl: 'https://placehold.co/100x100/a78bfa/4c1d95?text=Eenadu',
+        },
+        date: '2025-08-16',
+        sourceUrl: 'https://www.youtube.com/watch?v=XyX5R4XZz9U'
+    },
+
+    // అంతర్జాతీయం
+    {
+        id: 8,
+        category: 'అంతర్జాతీయం',
+        headline: 'అమెరికా అధ్యక్ష ఎన్నికలు: ట్రంప్, హరిస్ మధ్య పోటీ మరింత ఉద్రిక్తం',
+        body: '2024 అమెరికా అధ్యక్ష ఎన్నికల సమయంలో డొనాల్డ్ ట్రంప్ మరియు కమలా హరిస్ మధ్య పోటీ మరింత ఉద్రిక్తంగా మారింది. ఇటీవలి డిబేట్ తర్వాత రెండు పార్టీల మద్దతుదారుల మధ్య వాగ్వాదాలు చెలరేగాయి.',
+        imageUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQnulx0MJ7jVSesqehew7dn1WZy7WO_QEEZPg&s',
+        author: {
+            name: 'ఈనాడు',
+            imageUrl: 'https://placehold.co/100x100/fed7aa/9a3412?text=Eenadu',
+        },
+        date: '2025-08-15',
+        sourceUrl: 'https://www.eenadu.net/international/us-election-2024-trump-vs-harris-tensions-rise-after-debate/120932109'
+    }
+
+
+
 ];
 
 // --- SVG Icons ---
@@ -226,4 +333,5 @@ export default function NewsPage() {
         </div>
     );
 }
+
 
