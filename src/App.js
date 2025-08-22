@@ -8,6 +8,7 @@ import SortingComponent from "./pages/SortingComponent";
 import DragSortBuckets from "./pages/DragSortBuckets";
 import QuizPage from "./componentss/QuizPage";
 import LessonList from "./componentss/LessonList";
+import NewsPage from "./components/NewsPage";
 import IXLHomePage from "./componentss/IXLHomePage";
 import SSC_CHSL_MockTest from "./componentss/SSC_CHSL_MockTest";
 import Vijay from "./componentss/Vijay";
@@ -35,6 +36,7 @@ function App() {
       <Route path="/pattern" element={<PatternGame />} />
       <Route path="/q" element={<AdditionQuiz />} />
       <Route path="/eng" element={<EngAnimation />} />
+         <Route path="/news" element={<NewsPage />} />
       <Route path="/quiz/:topicId" element={<QuizPage />} />
 
       <Route path="/kid/:topicId" element={<KidFriendlyPage />} />
