@@ -191,7 +191,7 @@ const NewsFeed = ({ newsItems, selectedCategory }) => {
     );
 };
 
-export default function App() {
+export default function NewsPage() {
     useEffect(() => {
         const link = document.createElement('link');
         link.href = 'https://fonts.googleapis.com/css2?family=Noto+Sans+Telugu:wght@400;700&display=swap';
@@ -226,3 +226,4 @@ export default function App() {
         </div>
     );
 }
+
