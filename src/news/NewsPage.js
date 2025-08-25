@@ -86,7 +86,7 @@ const MediaCarousel = ({ media, isActive }) => {
                             <YouTubePlayer videoId={item.id} isVisible={isActive && index === currentIndex} />
                         ) : (
                             <img 
-                                src={item.src} 
+                                src={item.src || "https://img.freepik.com/free-vector/gradient-breaking-news-logo-design_23-2151128806.jpg?semt=ais_hybrid&w=740&q=80"} 
                                 alt="News media" 
                                 className="w-full h-full object-cover" 
                                 onError={(e) => { e.target.onerror = null; e.target.src='https://placehold.co/800x600/ccc/ffffff?text=Image+Error'; }}
