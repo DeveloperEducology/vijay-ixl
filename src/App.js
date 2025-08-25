@@ -16,7 +16,6 @@ import PatternGame from "./pages/PatternGame";
 import EngAnimation from "./componentss/English/EngAnimation";
 import AdditionQuiz from "./componentss/AddRobotsQuestion";
 import NewsPage from "./news/NewsPage";
-import NewsForm from "./news/NewsForm";
 import ListNews from "./news/ListNews";
 
 function App() {
@@ -39,7 +38,7 @@ function App() {
       <Route path="/q" element={<AdditionQuiz />} />
       <Route path="/eng" element={<EngAnimation />} />
       <Route path="/news" element={<NewsPage />} />
-      <Route path="/news-form" element={<NewsForm />} />
+    
       <Route path="/quiz/:topicId" element={<QuizPage />} />
       <Route path="/news/list" element={<ListNews />} />
 
