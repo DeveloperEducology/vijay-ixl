@@ -349,9 +349,7 @@ const QuizPage = () => {
 
     switch (currentQuestion.type) {
       case "english-fill":
-        return (
-          <FillInTheBlanksQuiz />
-        )
+        return <FillInTheBlanksQuiz />;
       case "input":
         return (
           <BlankInputComponent

@@ -8,7 +8,6 @@ import SortingComponent from "./pages/SortingComponent";
 import DragSortBuckets from "./pages/DragSortBuckets";
 import QuizPage from "./componentss/QuizPage";
 import LessonList from "./componentss/LessonList";
-import NewsPage from "./components/NewsPage";
 import IXLHomePage from "./componentss/IXLHomePage";
 import SSC_CHSL_MockTest from "./componentss/SSC_CHSL_MockTest";
 import Vijay from "./componentss/Vijay";
@@ -16,6 +15,9 @@ import TestUI from "./pages/TestUI";
 import PatternGame from "./pages/PatternGame";
 import EngAnimation from "./componentss/English/EngAnimation";
 import AdditionQuiz from "./componentss/AddRobotsQuestion";
+import NewsPage from "./news/NewsPage";
+import NewsForm from "./news/NewsForm";
+import ListNews from "./news/ListNews";
 
 function App() {
   return (
@@ -36,8 +38,10 @@ function App() {
       <Route path="/pattern" element={<PatternGame />} />
       <Route path="/q" element={<AdditionQuiz />} />
       <Route path="/eng" element={<EngAnimation />} />
-         <Route path="/news" element={<NewsPage />} />
+      <Route path="/news" element={<NewsPage />} />
+      <Route path="/news-form" element={<NewsForm />} />
       <Route path="/quiz/:topicId" element={<QuizPage />} />
+      <Route path="/news/list" element={<ListNews />} />
 
       <Route path="/kid/:topicId" element={<KidFriendlyPage />} />
       <Route path="/subjects/:classId" element={<SubjectsPage />} />

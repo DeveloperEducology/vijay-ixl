@@ -2686,50 +2686,52 @@ Time = ${totalLength} ÷ ${relativeSpeed} = ${Math.round(time)} sec`,
     ];
   },
 
+  "ways-to-make-a-number-sums-to-10": (numOptions = 4) => {
+    // Random target between 1 and 10
+    const target = Math.floor(Math.random() * 10) + 1;
 
- "ways-to-make-a-number-sums-to-10": (numOptions = 4) => {
-  // Random target between 1 and 10
-  const target = Math.floor(Math.random() * 10) + 1;
+    // Helper: random integer in range
+    const randomInt = (min, max) =>
+      Math.floor(Math.random() * (max - min + 1)) + min;
 
-  // Helper: random integer in range
-  const randomInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
-
-  // All correct pairs: a + b = target
-  const correctPairs = [];
-  for (let a = 0; a <= target; a++) {
-    correctPairs.push(`${a} + ${target - a}`);
-  }
-
-  // Pick one correct answer at random
-  const correctAnswer = correctPairs[randomInt(0, correctPairs.length - 1)];
-
-  // Generate distractors (incorrect but plausible sums)
-  const distractors = new Set();
-  while (distractors.size < numOptions - 1) {
-    // Create a sum close to target ±3, but not equal to target
-    const offset = randomInt(1, 3) * (Math.random() < 0.5 ? -1 : 1);
-    const sumValue = target + offset;
-
-    // Randomly split sumValue into two parts
-    const a = randomInt(0, sumValue);
-    const b = sumValue - a;
-    const option = `${a} + ${b}`;
-
-    if (!correctPairs.includes(option) && !distractors.has(option)) {
-      distractors.add(option);
+    // All correct pairs: a + b = target
+    const correctPairs = [];
+    for (let a = 0; a <= target; a++) {
+      correctPairs.push(`${a} + ${target - a}`);
     }
-  }
 
-  // Combine and shuffle
-  const options = [...distractors, correctAnswer].sort(() => Math.random() - 0.5);
+    // Pick one correct answer at random
+    const correctAnswer = correctPairs[randomInt(0, correctPairs.length - 1)];
 
-  return {
-    question: `Which of the following shows a correct way to make ${target}?`,
-    options,
-    answer: correctAnswer,
-    type: "mcq",
-  };
-},
+    // Generate distractors (incorrect but plausible sums)
+    const distractors = new Set();
+    while (distractors.size < numOptions - 1) {
+      // Create a sum close to target ±3, but not equal to target
+      const offset = randomInt(1, 3) * (Math.random() < 0.5 ? -1 : 1);
+      const sumValue = target + offset;
+
+      // Randomly split sumValue into two parts
+      const a = randomInt(0, sumValue);
+      const b = sumValue - a;
+      const option = `${a} + ${b}`;
+
+      if (!correctPairs.includes(option) && !distractors.has(option)) {
+        distractors.add(option);
+      }
+    }
+
+    // Combine and shuffle
+    const options = [...distractors, correctAnswer].sort(
+      () => Math.random() - 0.5
+    );
+
+    return {
+      question: `Which of the following shows a correct way to make ${target}?`,
+      options,
+      answer: correctAnswer,
+      type: "mcq",
+    };
+  },
 
   // Example usage:
   // const question = ordinalEmojiGenerator();
