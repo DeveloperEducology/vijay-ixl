@@ -12,6 +12,7 @@
     "fast-levenshtein": "^3.0.0",
     "firebase": "^12.1.0",
     "framer-motion": "^12.23.12",
+    "html-to-image": "^1.11.13",
     "katex": "^0.16.22",
     "plotly.js": "^3.0.3",
     "prop-types": "^15.8.1",
