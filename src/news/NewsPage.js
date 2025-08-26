@@ -6,6 +6,15 @@ import React, {
   useCallback,
 } from "react";
 
+// Make sure to import Swiper styles and components at the top of your file
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Navigation, Pagination, A11y } from "swiper/modules";
+
+// Import Swiper styles
+import "swiper/css";
+import "swiper/css/navigation";
+import "swiper/css/pagination";
+
 // --- Components ---
 
 // YouTubePlayer component with an added unmute button for better UX.
@@ -137,51 +146,50 @@ const BookmarkIcon = () => (
 
 // --- Reusable Components ---
 
-// Carousel Component with sliding animation
+// Carousel Component refactored with Swiper.js for smooth gestures
 const MediaCarousel = ({ media, isActive }) => {
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const carouselRef = useRef(null);
+  // This state tracks the active slide *within the Swiper component*
+  // to ensure only the visible video plays.
+  const [activeSlideIndex, setActiveSlideIndex] = useState(0);
 
-  useEffect(() => {
-    const el = carouselRef.current;
-    if (!el) return;
-    const stopPropagation = (e) => e.stopPropagation();
-    el.addEventListener("touchstart", stopPropagation);
-    return () => {
-      el.removeEventListener("touchstart", stopPropagation);
-    };
-  }, []);
-
-  const handleNext = (e) => {
+  // We stop propagation on the container to prevent vertical swipe
+  // of the news short when interacting with the horizontal carousel.
+  const handleTouchStart = (e) => {
     e.stopPropagation();
-    setCurrentIndex((prevIndex) => (prevIndex + 1) % media.length);
-  };
-
-  const handlePrev = (e) => {
-    e.stopPropagation();
-    setCurrentIndex(
-      (prevIndex) => (prevIndex - 1 + media.length) % media.length
-    );
   };
 
   return (
-    <div ref={carouselRef} className="relative w-full h-full overflow-hidden">
-      <div
-        className="flex transition-transform duration-500 ease-in-out h-full"
-        style={{ transform: `translateX(-${currentIndex * 100}%)` }}
+    <div
+      className="relative w-full h-full"
+      onTouchStart={handleTouchStart} // Prevents parent swipe
+      role="region"
+      aria-label="Media carousel"
+    >
+      <Swiper
+        // Install Swiper modules
+        modules={[Navigation, Pagination, A11y]}
+        spaceBetween={0}
+        slidesPerView={1}
+        navigation // Enables previous/next arrows
+        pagination={{ clickable: true }} // Enables clickable dots
+        loop={media.length > 1} // Enables infinite looping
+        onSlideChange={(swiper) => setActiveSlideIndex(swiper.realIndex)} // Update active slide index
+        className="w-full h-full"
       >
         {media.map((item, index) => (
-          <div key={index} className="w-full h-full flex-shrink-0">
+          <SwiperSlide key={index}>
             {item.type === "video" ? (
               <YouTubePlayer
                 videoId={item.videoId}
-                isActive={isActive && index === currentIndex}
+                // Video is active only if the parent NewsShort is active AND it's the current slide
+                isActive={isActive && index === activeSlideIndex}
               />
             ) : (
               <img
                 src={item.src}
                 alt={`Slide ${index + 1}`}
                 className="w-full h-full object-cover"
+                loading="lazy" // Improve performance by lazy loading images
                 onError={(e) => {
                   e.target.onerror = null;
                   e.target.src =
@@ -189,39 +197,9 @@ const MediaCarousel = ({ media, isActive }) => {
                 }}
               />
             )}
-          </div>
+          </SwiperSlide>
         ))}
-      </div>
-      {media.length > 1 && (
-        <>
-          <button
-            onClick={handlePrev}
-            className="absolute top-1/2 left-2 transform -translate-y-1/2 bg-black bg-opacity-40 text-white p-2 rounded-full z-10 hover:bg-opacity-60 transition"
-          >
-            {" "}
-            &#10094;{" "}
-          </button>
-          <button
-            onClick={handleNext}
-            className="absolute top-1/2 right-2 transform -translate-y-1/2 bg-black bg-opacity-40 text-white p-2 rounded-full z-10 hover:bg-opacity-60 transition"
-          >
-            {" "}
-            &#10095;{" "}
-          </button>
-          <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 flex space-x-2 z-10">
-            {media.map((_, index) => (
-              <div
-                key={index}
-                className={`w-2 h-2 rounded-full transition-colors ${
-                  index === currentIndex
-                    ? "bg-white"
-                    : "bg-gray-400 bg-opacity-70"
-                }`}
-              ></div>
-            ))}
-          </div>
-        </>
-      )}
+      </Swiper>
     </div>
   );
 };
