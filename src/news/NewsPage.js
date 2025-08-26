@@ -5,10 +5,11 @@ import React, {
   useMemo,
   useCallback,
 } from "react";
+import { toPng } from "html-to-image";
 
-// Make sure to import Swiper styles and components at the top of your file
+// Import Swiper modules
 import { Swiper, SwiperSlide } from "swiper/react";
-import { Navigation, Pagination, A11y } from "swiper/modules";
+import { Navigation, Pagination, A11y, Mousewheel } from "swiper/modules";
 
 // Import Swiper styles
 import "swiper/css";
@@ -17,12 +18,10 @@ import "swiper/css/pagination";
 
 // --- Components ---
 
-// YouTubePlayer component with an added unmute button for better UX.
 const YouTubePlayer = ({ videoId, isActive }) => {
   const playerRef = useRef(null);
   const [isMuted, setIsMuted] = useState(false);
 
-  // We only render the iframe if the slide is active to improve performance.
   if (!isActive) {
     return (
       <div className="w-full h-full bg-black flex items-center justify-center text-white">
@@ -32,7 +31,7 @@ const YouTubePlayer = ({ videoId, isActive }) => {
   }
 
   const toggleMute = (e) => {
-    e.stopPropagation(); // Prevent card from swiping when clicking button
+    e.stopPropagation();
     setIsMuted(!isMuted);
   };
 
@@ -146,14 +145,9 @@ const BookmarkIcon = () => (
 
 // --- Reusable Components ---
 
-// Carousel Component refactored with Swiper.js for smooth gestures
 const MediaCarousel = ({ media, isActive }) => {
-  // This state tracks the active slide *within the Swiper component*
-  // to ensure only the visible video plays.
   const [activeSlideIndex, setActiveSlideIndex] = useState(0);
 
-  // We stop propagation on the container to prevent vertical swipe
-  // of the news short when interacting with the horizontal carousel.
   const handleTouchStart = (e) => {
     e.stopPropagation();
   };
@@ -161,27 +155,43 @@ const MediaCarousel = ({ media, isActive }) => {
   return (
     <div
       className="relative w-full h-full"
-      onTouchStart={handleTouchStart} // Prevents parent swipe
+      onTouchStart={handleTouchStart}
       role="region"
       aria-label="Media carousel"
     >
       <Swiper
-        // Install Swiper modules
         modules={[Navigation, Pagination, A11y]}
         spaceBetween={0}
         slidesPerView={1}
-        navigation // Enables previous/next arrows
-        pagination={{ clickable: true }} // Enables clickable dots
-        loop={media.length > 1} // Enables infinite looping
-        onSlideChange={(swiper) => setActiveSlideIndex(swiper.realIndex)} // Update active slide index
+        navigation
+        pagination={{ 
+          clickable: true,
+          // Custom pagination for better mobile experience
+          renderBullet: function (index, className) {
+            return '<span class="' + className + '" style="width: 8px; height: 8px; margin: 0 4px;"></span>';
+          }
+        }}
+        loop={media.length > 1}
+        onSlideChange={(swiper) => setActiveSlideIndex(swiper.realIndex)}
         className="w-full h-full"
+        // Improved responsive settings
+        touchRatio={0.5}
+        onTouchStart={(swiper, e) => e.stopPropagation()}
+        // Responsive breakpoints
+        breakpoints={{
+          // When window width is >= 640px
+          640: {
+            pagination: {
+              dynamicBullets: true,
+            }
+          }
+        }}
       >
         {media.map((item, index) => (
           <SwiperSlide key={index}>
             {item.type === "video" ? (
               <YouTubePlayer
                 videoId={item.videoId}
-                // Video is active only if the parent NewsShort is active AND it's the current slide
                 isActive={isActive && index === activeSlideIndex}
               />
             ) : (
@@ -189,7 +199,7 @@ const MediaCarousel = ({ media, isActive }) => {
                 src={item.src}
                 alt={`Slide ${index + 1}`}
                 className="w-full h-full object-cover"
-                loading="lazy" // Improve performance by lazy loading images
+                loading="lazy"
                 onError={(e) => {
                   e.target.onerror = null;
                   e.target.src =
@@ -235,31 +245,86 @@ const Header = ({ categories, selectedCategory, onSelectCategory }) => (
   </div>
 );
 
-const NewsShort = ({ article, isActive, isPrevious, swipeDirection }) => {
+const ShareCard = React.forwardRef(({ article }, ref) => {
   if (!article) return null;
-
-  const getAnimationClass = () => {
-    if (!isActive && !isPrevious) return "translate-y-full z-0";
-    if (isActive) {
-      if (swipeDirection === "up") return "animate-slide-in-up z-20";
-      if (swipeDirection === "down") return "animate-slide-in-down z-20";
-      return "translate-y-0 z-20";
-    }
-    if (isPrevious) {
-      if (swipeDirection === "up") return "animate-slide-out-up z-10";
-      if (swipeDirection === "down") return "animate-slide-out-down z-10";
-    }
-    return "translate-y-full z-0";
-  };
 
   return (
     <div
-      className={`absolute inset-0 w-full h-full bg-white flex flex-col ${getAnimationClass()}`}
+      ref={ref}
+      className="fixed top-0 -left-[9999px] bg-white p-5"
+      style={{ width: "375px", fontFamily: "'Noto Sans Telugu', sans-serif" }}
     >
+      <div className="flex items-center mb-4">
+        <img
+          src={article.author.avatar}
+          alt={article.author.name}
+          className="h-8 w-8 object-cover rounded-full mr-3"
+        />
+        <span className="font-bold text-gray-800">{article.author.name}</span>
+      </div>
+      <h2 className="text-2xl font-bold mb-3 leading-tight text-gray-900">
+        {article.headline}
+      </h2>
+      <p className="text-base text-gray-700 leading-relaxed mb-4">
+        {article.body.slice(0, 150)}…
+      </p>
+      <div className="text-right text-sm font-bold text-blue-600">
+        <p>Read more on NewsAI</p>
+      </div>
+    </div>
+  );
+});
+
+const NewsShort = ({ article, isActive }) => {
+  const shareCardRef = useRef(null);
+  const [isSharing, setIsSharing] = useState(false);
+
+  if (!article) {
+    return null;
+  }
+
+  const handleShare = async () => {
+    if (!shareCardRef.current || !navigator.share) {
+      alert("Sharing is not supported on this browser.");
+      return;
+    }
+
+    setIsSharing(true);
+    try {
+      const dataUrl = await toPng(shareCardRef.current, {
+        cacheBust: true,
+        pixelRatio: 2,
+      });
+      const response = await fetch(dataUrl);
+      const blob = await response.blob();
+      const file = new File([blob], "news-card.png", { type: blob.type });
+
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({
+          files: [file],
+          title: article.headline,
+          text: `Check out this news: ${article.headline}`,
+        });
+      } else {
+        alert("Sharing files is not supported on this browser.");
+      }
+    } catch (error) {
+      console.error("Could not share the image.", error);
+      alert("Sorry, there was an error creating the share image.");
+    } finally {
+      setIsSharing(false);
+    }
+  };
+
+  return (
+    <div className="w-full h-full bg-white flex flex-col">
+      <ShareCard ref={shareCardRef} article={article} />
+
       <div className="relative h-2/5 w-full">
         <MediaCarousel media={article.media} isActive={isActive} />
         <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent pointer-events-none"></div>
       </div>
+
       <div className="flex-grow p-4 flex flex-col overflow-y-auto">
         <div className="flex justify-between items-center mb-3">
           <img
@@ -268,8 +333,21 @@ const NewsShort = ({ article, isActive, isPrevious, swipeDirection }) => {
             className="h-6 w-6 object-cover rounded-full mr-2"
           />
           <div className="flex items-center space-x-4 text-gray-500">
-            <BookmarkIcon />
-            <ShareIcon />
+            <button className="cursor-pointer">
+              <BookmarkIcon />
+            </button>
+            <button
+              onClick={handleShare}
+              disabled={isSharing}
+              className="cursor-pointer disabled:opacity-50 disabled:cursor-wait"
+              aria-label="Share as image"
+            >
+              {isSharing ? (
+                <div className="w-5 h-5 border-2 border-gray-400 border-t-blue-500 rounded-full animate-spin"></div>
+              ) : (
+                <ShareIcon />
+              )}
+            </button>
           </div>
         </div>
         <h2
@@ -288,6 +366,7 @@ const NewsShort = ({ article, isActive, isPrevious, swipeDirection }) => {
         </p>
         <p className="text-xs text-gray-400 mt-2">
           {new Date(article.date).toLocaleDateString("te-IN", {
+            year: "numeric",
             month: "long",
             day: "numeric",
           })}{" "}
@@ -321,24 +400,13 @@ export default function App() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [swipeDirection, setSwipeDirection] = useState("none");
-
-  const mainRef = useRef(null);
-  const touchStartY = useRef(0);
-  const touchEndY = useRef(0);
-  const prevIndexRef = useRef(currentIndex);
-
-  useEffect(() => {
-    prevIndexRef.current = currentIndex;
-  }, [currentIndex]);
 
   const fetchArticles = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     try {
       const apiUrl = "https://newsai-8a45.onrender.com/api/articles?limit=50";
-      const proxyUrl = "https://corsproxy.io/?";
-      const response = await fetch(`${apiUrl}$}`);
+      const response = await fetch(apiUrl);
 
       if (!response.ok) {
         throw new Error(
@@ -354,14 +422,12 @@ export default function App() {
         }
 
         const mockVideoIds = ["3JZ_D3ELwOQ", "L_jWHffIx5E", "dQw4w9WgXcQ"];
-        // For testing, add two videos to the first couple of articles
         if (index < 2) {
           media.push({ type: "video", videoId: mockVideoIds[0] });
           media.push({ type: "video", videoId: mockVideoIds[1] });
         }
 
         if (media.length === 0) {
-          // media.push({ type: 'image', src: `https://placehold.co/800x600/eee/333?text=${encodeURIComponent(article.title)}` });
           media.push({
             type: "image",
             src: `https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRaFi7FBvuwvIRpGO-gsgfbb-IlQ9e7KHq66w&s`,
@@ -418,55 +484,6 @@ export default function App() {
     setCurrentIndex(0);
   }, [selectedCategory]);
 
-  useEffect(() => {
-    const mainEl = mainRef.current;
-    if (!mainEl) return;
-
-    const handleTouchStart = (e) => {
-      if (e.target.closest("a, button, iframe")) {
-        touchStartY.current = 0;
-        return;
-      }
-      touchStartY.current = e.targetTouches[0].clientY;
-    };
-
-    const handleTouchMove = (e) => {
-      touchEndY.current = e.targetTouches[0].clientY;
-    };
-
-    const handleTouchEnd = () => {
-      if (touchStartY.current === 0) return;
-      const deltaY = touchStartY.current - touchEndY.current;
-
-      if (deltaY > 50) {
-        setSwipeDirection("up");
-        setCurrentIndex((prev) => (prev + 1) % filteredNews.length);
-      } else if (deltaY < -50) {
-        setSwipeDirection("down");
-        setCurrentIndex(
-          (prev) => (prev - 1 + filteredNews.length) % filteredNews.length
-        );
-      }
-      touchStartY.current = 0;
-      touchEndY.current = 0;
-      setTimeout(() => setSwipeDirection("none"), 500);
-    };
-
-    mainEl.addEventListener("touchstart", handleTouchStart, { passive: true });
-    mainEl.addEventListener("touchmove", handleTouchMove, { passive: true });
-    mainEl.addEventListener("touchend", handleTouchEnd, { passive: true });
-
-    return () => {
-      mainEl.removeEventListener("touchstart", handleTouchStart);
-      mainEl.removeEventListener("touchmove", handleTouchMove);
-      mainEl.removeEventListener("touchend", handleTouchEnd);
-    };
-  }, [filteredNews]);
-
-  const currentNews = filteredNews[currentIndex];
-
-  console.log("current news", currentNews);
-
   return (
     <div className="bg-gray-200 h-screen w-screen overflow-hidden relative font-sans">
       <Header
@@ -474,35 +491,52 @@ export default function App() {
         selectedCategory={selectedCategory}
         onSelectCategory={setSelectedCategory}
       />
-      <main ref={mainRef} className="h-full w-full relative pt-14">
+      <main className="h-full w-full relative pt-14">
         {isLoading ? (
-          <div className="text-center p-10 flex items-center justify-center h-full">
-            Loading articles...
+          <div className="flex items-center justify-center h-full">
+            Loading...
           </div>
         ) : error ? (
-          <div className="text-center p-10 text-red-500 flex items-center justify-center h-full">
+          <div className="flex items-center justify-center h-full text-red-500">
             Error: {error}
           </div>
         ) : filteredNews.length > 0 ? (
-          <>
-            <NewsShort
-              key={filteredNews[currentIndex].id}
-              article={filteredNews[currentIndex]}
-              isActive={true}
-              isPrevious={false}
-              swipeDirection={swipeDirection}
-            />
-            {currentIndex !== prevIndexRef.current &&
-              filteredNews[prevIndexRef.current] && (
-                <NewsShort
-                  key={filteredNews[prevIndexRef.current].id}
-                  article={filteredNews[prevIndexRef.current]}
-                  isActive={false}
-                  isPrevious={true}
-                  swipeDirection={swipeDirection}
-                />
-              )}
-          </>
+          <div className="w-full h-screen sm:h-[calc(100vh-80px)]">
+            <Swiper
+              direction="vertical"
+              modules={[Mousewheel, Pagination]}
+              className="w-full h-full"
+              onSlideChange={(swiper) => setCurrentIndex(swiper.activeIndex)}
+              key={selectedCategory}
+              slidesPerView={1}
+              spaceBetween={0}
+              mousewheel={true}
+              // Hide pagination for vertical swiper
+              pagination={false}
+              // Improved mobile responsiveness
+              touchEventsTarget="container"
+              touchRatio={0.8}
+              resistanceRatio={0.7}
+              threshold={10}
+              style={{ height: "100%" }}
+              // Prevent interference with horizontal swiper
+              onTouchStart={(swiper, e) => {
+                // Check if touch is on a horizontal swiper element
+                if (e.target.closest('.swiper-horizontal')) {
+                  return false; // Prevent vertical swipe if touching horizontal swiper
+                }
+              }}
+            >
+              {filteredNews.map((article, index) => (
+                <SwiperSlide key={article.id} className="w-full h-full">
+                  <NewsShort
+                    article={article}
+                    isActive={index === currentIndex}
+                  />
+                </SwiperSlide>
+              ))}
+            </Swiper>
+          </div>
         ) : (
           <div className="text-gray-800 text-center p-10 bg-white m-auto flex flex-col items-center justify-center h-full">
             <h2
@@ -520,6 +554,51 @@ export default function App() {
           </div>
         )}
       </main>
+      
+      {/* Add custom CSS to hide vertical dots */}
+      <style>
+        {`
+          .swiper-vertical > .swiper-pagination-bullets {
+            display: none !important;
+          }
+          
+          /* Improve media carousel for mobile */
+          .swiper-horizontal .swiper-pagination-bullets {
+            bottom: 10px !important;
+          }
+          
+          .swiper-pagination-bullet {
+            background: rgba(255, 255, 255, 0.8) !important;
+            opacity: 0.7 !important;
+          }
+          
+          .swiper-pagination-bullet-active {
+            background: #fff !important;
+            opacity: 1 !important;
+          }
+          
+          /* Improve navigation buttons for mobile */
+          .swiper-button-next, .swiper-button-prev {
+            width: 30px !important;
+            height: 30px !important;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 50%;
+            color: white !important;
+          }
+          
+          .swiper-button-next:after, .swiper-button-prev:after {
+            font-size: 14px !important;
+            font-weight: bold;
+          }
+          
+          /* Hide navigation on small screens */
+          @media (max-width: 640px) {
+            .swiper-button-next, .swiper-button-prev {
+              display: none !important;
+            }
+          }
+        `}
+      </style>
     </div>
   );
 }
