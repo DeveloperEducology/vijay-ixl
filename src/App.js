@@ -17,6 +17,7 @@ import EngAnimation from "./componentss/English/EngAnimation";
 import AdditionQuiz from "./componentss/AddRobotsQuestion";
 import NewsPage from "./news/NewsPage";
 import ListNews from "./news/ListNews";
+import ArticlesTable from "./news/ArticlesTable"
 
 function App() {
   return (
@@ -38,7 +39,7 @@ function App() {
       <Route path="/q" element={<AdditionQuiz />} />
       <Route path="/eng" element={<EngAnimation />} />
       <Route path="/news" element={<NewsPage />} />
-    
+     <Route path="/ArticlesTable" element={<ArticlesTable />} />
       <Route path="/quiz/:topicId" element={<QuizPage />} />
       <Route path="/news/list" element={<ListNews />} />
 
